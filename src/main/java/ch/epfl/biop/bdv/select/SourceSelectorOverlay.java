@@ -29,7 +29,7 @@ import java.util.List;
  *
  * GUI functioning:
  *
- * The user can draw a rectangle and all sources which interesects this rectangle
+ * The user can draw a rectangle and all sources which interesects this rectangle AT THE CURRENT PLANE SLICING of Bdv
  * will be involved in the next selection change event.
  * Either the user was holding no extra key:
  * - the involved sources will define the new selection set
