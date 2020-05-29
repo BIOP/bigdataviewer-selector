@@ -196,6 +196,11 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
             int initialSize = selectedSources.size();
             switch(mode) {
                 case SET :
+                    // Sanity check : only visible sources can be selected
+                    if (currentSources.stream().anyMatch(sac -> !viewer.state().isSourceVisible(sac))) {
+                        System.err.println("Error : attempt to select a source which is not visible - selection ignored");
+                        return;
+                    }
                     selectedSources.clear();
                     selectedSources.addAll(currentSources);
                     break;
