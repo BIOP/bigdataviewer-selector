@@ -76,7 +76,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
         styles.put("SELECTED", new SelectedOverlayStyle());
     }
 
-    public void addSelectionBehaviours(Behaviours behaviours) {
+    protected void addSelectionBehaviours(Behaviours behaviours) {
         behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.SET ), "select-set-sources", new String[] { "button1" });
         behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.ADD ), "select-add-sources", new String[] { "shift button1" });
         behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.REMOVE ), "select-remove-sources", new String[] { "ctrl button1" });
@@ -86,18 +86,18 @@ public class SourceSelectorOverlay extends BdvOverlay {
         return styles;
     }
 
-    public synchronized void startCurrentSelection(int x, int y) {
+    synchronized void startCurrentSelection(int x, int y) {
         xCurrentSelectStart = x;
         yCurrentSelectStart = y;
     }
 
-    public synchronized void updateCurrentSelection(int xCurrent, int yCurrent) {
+    synchronized void updateCurrentSelection(int xCurrent, int yCurrent) {
         xCurrentSelectEnd = xCurrent;
         yCurrentSelectEnd = yCurrent;
         isCurrentlySelecting = true;
     }
 
-    public synchronized void endCurrentSelection(int x, int y, String mode) {
+    synchronized void endCurrentSelection(int x, int y, String mode) {
         xCurrentSelectEnd = x;
         yCurrentSelectEnd = y;
         isCurrentlySelecting = false;
@@ -108,7 +108,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
     }
 
-    public Rectangle getCurrentSelectionRectangle() {
+    Rectangle getCurrentSelectionRectangle() {
         int x0, y0, w, h;
         if (xCurrentSelectStart>xCurrentSelectEnd) {
             x0 = xCurrentSelectEnd;
@@ -130,7 +130,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
         return new Rectangle(x0, y0, w, h);
     }
 
-    private Set<SourceAndConverter<?>> getLastSelectedSources() {
+    Set<SourceAndConverter<?>> getLastSelectedSources() {
         Set<SourceAndConverter<?>> lastSelected = new HashSet<>();
 
         final RenderBoxHelper rbh = new RenderBoxHelper();
@@ -324,7 +324,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
         }
     }
 
-    class SelectedOverlayStyle implements SourceSelectorOverlay.OverlayStyle {
+    public class SelectedOverlayStyle implements SourceSelectorOverlay.OverlayStyle {
         Color backColor = new Color(0xF7BF18);
 
         Color frontColor = new Color(0xC7F718);
@@ -365,7 +365,10 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
     }
 
-    public class RectangleSelectSourcesBehaviour implements DragBehaviour {
+    /**
+     * Drag Selection Behaviour
+     */
+    class RectangleSelectSourcesBehaviour implements DragBehaviour {
 
         final String mode;
 

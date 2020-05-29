@@ -26,7 +26,7 @@
 
 	<groupId>ch.epfl.biop</groupId>
 	<artifactId>bigdataviewer-selector</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>0.1.0</version>
 
 	<name>Selector For BigDataViewer</name>
 	<description>Selector Behaviours for BigDataViewer</description>
@@ -134,11 +134,9 @@
 	<properties>
 		<license.licenseName>N/A</license.licenseName>
 		<license.copyrightOwners>N/A</license.copyrightOwners>
-		<package-name>ch.epfl.biop.bigdataviewerBiopTools</package-name>
+		<package-name>ch.epfl.biop.bdv.select</package-name>
 		<scijava-maven-plugin.version>1.1.0</scijava-maven-plugin.version>
 
-
-		<!--<imglib2-cache.version>1.0.0-beta-13</imglib2-cache.version>-->
 		<imglib2.version>5.9.0</imglib2.version>
 		<imglib2-ij.version>2.0.0-beta-46</imglib2-ij.version>
 		<bigdataviewer-core.version>9.0.1</bigdataviewer-core.version>
@@ -162,11 +160,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-vistools</artifactId>
 		</dependency>
@@ -177,37 +170,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>ij</artifactId>
-			<!-- Try removing after pom-scijava 29.x.x -->
-		</dependency>
-
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-ij</artifactId>
-			<!-- Try removing after pom-scijava 29.x.x -->
-		</dependency>
-
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2</artifactId>
-			<!-- Try removing after pom-scijava 29.x.x -->
-		</dependency>
-
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>scijava-common</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>scijava-ui-swing</artifactId>
 		</dependency>
 
 		<dependency>
@@ -215,11 +180,5 @@
 			<artifactId>imagej</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-
 	</dependencies>
-    </project>
+</project>
