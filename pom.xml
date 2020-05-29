@@ -26,7 +26,7 @@
 
 	<groupId>ch.epfl.biop</groupId>
 	<artifactId>bigdataviewer-selector</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1-SNAPSHOT</version>
 
 	<name>Selector For BigDataViewer</name>
 	<description>Selector Behaviours for BigDataViewer</description>
