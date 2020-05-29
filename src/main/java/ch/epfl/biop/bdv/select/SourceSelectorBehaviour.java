@@ -38,6 +38,8 @@ import static bdv.viewer.ViewerStateChange.VISIBILITY_CHANGED;
  *
  * Limitation : supports 'Box' (3d RAI with an Affine Transform) sources - A WarpedSource will not be handled well without some extra effort for instance
  *
+ * See BdvSelectorDemo for usage example
+ *
  * @author Nicolas Chiaruttini, BIOP, EPFL, 2020
  */
 
