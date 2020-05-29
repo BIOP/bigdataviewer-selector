@@ -5,7 +5,6 @@ import bdv.util.BdvOverlay;
 import bdv.viewer.SourceAndConverter;
 import bdv.viewer.ViewerPanel;
 import bdv.viewer.ViewerStateChange;
-import bdv.viewer.ViewerStateChangeListener;
 import bdv.tools.boundingbox.RenderBoxHelper;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.RealInterval;
@@ -25,15 +24,13 @@ import static bdv.viewer.ViewerStateChange.VISIBILITY_CHANGED;
  * Works with {}
  */
 
-public class SourceSelectorOverlay extends BdvOverlay implements ViewerStateChangeListener {
+public class SourceSelectorOverlay extends BdvOverlay {
 
     final ViewerPanel viewer;
 
     boolean isCurrentlySelecting = false;
 
     int xCurrentSelectStart, yCurrentSelectStart, xCurrentSelectEnd, yCurrentSelectEnd;
-
-    Set<SourceAndConverter<?>> selectedSources = new HashSet<>();
 
     private int canvasWidth;
 
@@ -43,32 +40,20 @@ public class SourceSelectorOverlay extends BdvOverlay implements ViewerStateChan
 
     Map<String, OverlayStyle> styles = new HashMap<>();
 
-    List<SelectedSourcesListener> selectedSourceListeners = new ArrayList<>();
+    final SourceSelectorBehaviour ssb;
 
-    final public static String SET = "SET";
-    final public static String ADD = "ADD";
-    final public static String REMOVE = "REMOVE";
-
-    public SourceSelectorOverlay(ViewerPanel viewer) {
+    public SourceSelectorOverlay(ViewerPanel viewer, SourceSelectorBehaviour ssb) {
+        this.ssb = ssb;
         this.viewer = viewer;
-        viewer.state().changeListeners().add(this);
-        updateSourceList();
+        updateBoxes();
         styles.put("DEFAULT", new DefaultOverlayStyle());
         styles.put("SELECTED", new SelectedOverlayStyle());
     }
 
     public void addSelectionBehaviours(Behaviours behaviours) {
-        behaviours.behaviour( new RectangleSelectSourcesBehaviour( SET ), "select-set-sources", new String[] { "button1" });
-        behaviours.behaviour( new RectangleSelectSourcesBehaviour( ADD ), "select-add-sources", new String[] { "shift button1" });
-        behaviours.behaviour( new RectangleSelectSourcesBehaviour( REMOVE ), "select-remove-sources", new String[] { "ctrl button1" });
-    }
-
-    public Set<SourceAndConverter<?>> getSelectedSources() {
-        synchronized (selectedSources) {
-            HashSet<SourceAndConverter<?>> copySelectedSources = new HashSet<>();
-            copySelectedSources.addAll(selectedSources);
-            return copySelectedSources;
-        }
+        behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.SET ), "select-set-sources", new String[] { "button1" });
+        behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.ADD ), "select-add-sources", new String[] { "shift button1" });
+        behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.REMOVE ), "select-remove-sources", new String[] { "ctrl button1" });
     }
 
     public Map<String, OverlayStyle> getStyles() {
@@ -92,27 +77,8 @@ public class SourceSelectorOverlay extends BdvOverlay implements ViewerStateChan
         isCurrentlySelecting = false;
         // Selection is done : but we need to access the trigger keys to understand what's happening
         Set<SourceAndConverter<?>> currentSelection = this.getLastSelectedSources();
-        switch(mode) {
-            case SET :
-                selectedSources.clear();
-                selectedSources.addAll(currentSelection);
-            break;
-            case ADD :
-                selectedSources.addAll(currentSelection);
-            break;
-            case REMOVE :
-                selectedSources.removeAll(currentSelection);
-            break;
-        }
-        // Necessary when double clicking without mouse movement
-        viewer.requestRepaint();
 
-        if (currentSelection.size()>=0) {
-            selectedSourceListeners.forEach(listener -> {
-                listener.selectedSourcesUpdated(getSelectedSources());
-                listener.lastSelectionEvent(currentSelection, mode);
-            });
-        }
+        ssb.processSelectionModificationEvent(getLastSelectedSources(), mode, "SelectorOverlay");
 
     }
 
@@ -195,39 +161,13 @@ public class SourceSelectorOverlay extends BdvOverlay implements ViewerStateChan
         this.canvasHeight = height;
     }
 
-    private synchronized void updateSourceList() {
+    public void updateBoxes() {
         sourcesBoxOverlay.clear();
         for (SourceAndConverter sac : viewer.state().getVisibleSources()) {
             if (sac.getSpimSource().getSource(0,0)!=null) { // TODO : fix hack to avoid dirty overlay filter
-                sourcesBoxOverlay.add(new SourceBoxOverlay(sac));
+                sourcesBoxOverlay.add(new SourceSelectorOverlay.SourceBoxOverlay(sac));
             }
         }
-        // Removes potentially selected source which has been removed from bdv
-        Set<SourceAndConverter<?>> leftOvers = new HashSet<>();
-        leftOvers.addAll(selectedSources);
-        leftOvers.removeAll(viewer.state().getVisibleSources());
-        selectedSources.removeAll(leftOvers);
-        if (leftOvers.size()>0) {
-            selectedSourceListeners.forEach(listener -> {
-                listener.selectedSourcesUpdated(getSelectedSources());
-                listener.lastSelectionEvent(leftOvers, REMOVE);
-            });
-        }
-    }
-
-    @Override
-    public void viewerStateChanged(ViewerStateChange change) {
-        if (change.equals(NUM_SOURCES_CHANGED)||change.equals(VISIBILITY_CHANGED)) {
-            updateSourceList();
-        }
-    }
-
-    public void addSelectedSourcesListener(SelectedSourcesListener selectedSourcesListener) {
-        selectedSourceListeners.add(selectedSourcesListener);
-    }
-
-    public void removeSelectedSourcesListener(SelectedSourcesListener selectedSourcesListener) {
-        selectedSourceListeners.remove(selectedSourcesListener);
     }
 
     class SourceBoxOverlay implements TransformedBox {
@@ -244,7 +184,7 @@ public class SourceSelectorOverlay extends BdvOverlay implements ViewerStateChan
         public void drawBoxOverlay(Graphics2D graphics) {
             OverlayStyle os;
 
-            if (selectedSources.contains(sac)) {
+            if (ssb.selectedSources.contains(sac)) {
                 os = styles.get("SELECTED");
             } else {
                 os = styles.get("DEFAULT");
@@ -412,13 +352,13 @@ public class SourceSelectorOverlay extends BdvOverlay implements ViewerStateChan
             startCurrentSelection(x,y);
             viewer.setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
             switch(mode) {
-                case SET :
+                case SourceSelectorBehaviour.SET :
                     viewer.showMessage("Set Selection" );
                     break;
-                case ADD :
+                case SourceSelectorBehaviour.ADD :
                     viewer.showMessage("Add Selection" );
                     break;
-                case REMOVE :
+                case SourceSelectorBehaviour.REMOVE :
                     viewer.showMessage("Remove Selection" );
                     break;
             }

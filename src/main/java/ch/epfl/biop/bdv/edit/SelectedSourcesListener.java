@@ -6,7 +6,8 @@ import java.util.Collection;
 
 public interface SelectedSourcesListener {
 
-    void selectedSourcesUpdated(Collection<SourceAndConverter<?>> selectedSources);
+    void selectedSourcesUpdated(Collection<SourceAndConverter<?>> selectedSources, String triggerMode);
 
-    void lastSelectionEvent(Collection<SourceAndConverter<?>> lastSelectedSources, String mode);
+    void lastSelectionEvent(Collection<SourceAndConverter<?>> lastSelectedSources, String mode, String triggerMode);
+
 }

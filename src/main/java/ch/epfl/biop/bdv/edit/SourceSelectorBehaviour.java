@@ -6,17 +6,21 @@ import bdv.util.BdvOptions;
 import bdv.util.BdvOverlaySource;
 import bdv.viewer.SourceAndConverter;
 import bdv.viewer.ViewerPanel;
+import bdv.viewer.ViewerStateChange;
+import bdv.viewer.ViewerStateChangeListener;
 import org.scijava.ui.behaviour.*;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 import org.scijava.ui.behaviour.util.TriggerBehaviourBindings;
 
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class SourceSelectorBehaviour {
+import static bdv.viewer.ViewerStateChange.NUM_SOURCES_CHANGED;
+import static bdv.viewer.ViewerStateChange.VISIBILITY_CHANGED;
+
+public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 
     SourceSelectorOverlay editorOverlay;
 
@@ -38,12 +42,20 @@ public class SourceSelectorBehaviour {
 
     List<ToggleListener> toggleListeners = new ArrayList<>();
 
+    final public static String SET = "SET";
+    final public static String ADD = "ADD";
+    final public static String REMOVE = "REMOVE";
+
+    List<SelectedSourcesListener> selectedSourceListeners = new ArrayList<>();
+
+    protected Set<SourceAndConverter<?>> selectedSources = ConcurrentHashMap.newKeySet(); // To think ? Make a concurrent Keyset
+
     public SourceSelectorBehaviour(BdvHandle bdvh, String triggerToggleSelector) {
         this.bdvh = bdvh;
         this.triggerbindings = bdvh.getTriggerbindings();
         this.viewer = bdvh.getViewerPanel();
 
-        editorOverlay = new SourceSelectorOverlay(viewer);
+        editorOverlay = new SourceSelectorOverlay(viewer, this);
 
         ClickBehaviour toggleEditor = (x,y) -> {
             if (isInstalled) {
@@ -58,6 +70,7 @@ public class SourceSelectorBehaviour {
         behavioursToggle.install(bdvh.getTriggerbindings(), "source-selector-toggle");
         behaviours = new Behaviours( new InputTriggerConfig(), "bdv" );
 
+        viewer.state().changeListeners().add(this);
     }
 
     public SourceSelectorOverlay getSourceSelectorOverlay() {
@@ -107,7 +120,110 @@ public class SourceSelectorBehaviour {
     // API Control Selected Sources
 
     public Set<SourceAndConverter<?>> getSelectedSources() {
-        return editorOverlay.getSelectedSources();
+        synchronized (selectedSources) {
+            HashSet<SourceAndConverter<?>> copySelectedSources = new HashSet<>();
+            copySelectedSources.addAll(selectedSources);
+            return copySelectedSources;
+        }
+    }
+
+    public void processSelectionModificationEvent(Set<SourceAndConverter<?>> currentSources, String mode, String eventSource) {
+        synchronized (selectedSources) {
+
+            int initialSize = selectedSources.size();
+            switch(mode) {
+                case SET :
+                    selectedSources.clear();
+                    selectedSources.addAll(currentSources);
+                    break;
+                case SourceSelectorBehaviour.ADD :
+                    // Sanity check : only visible sources can be selected
+                    if (currentSources.stream().anyMatch(sac -> !bdvh.getViewerPanel().state().isSourceVisible(sac))) {
+                        System.err.println("Error : attempt to select a source which is not visible - selection ignored");
+                        return;
+                    }
+                    selectedSources.addAll(currentSources);
+                    break;
+                case SourceSelectorBehaviour.REMOVE :
+                    selectedSources.removeAll(currentSources);
+                    break;
+                default:
+                    System.err.println("Unhandled "+mode+" selected source modification event");
+                    break;
+            }
+
+            if (currentSources.size()!=0) {
+                selectedSourceListeners.forEach(listener -> {
+                    listener.selectedSourcesUpdated(getSelectedSources(), eventSource);
+                    listener.lastSelectionEvent(currentSources, mode, eventSource);
+                });
+            }
+
+            if ((currentSources.size()==0)&&(initialSize!=0)&&(mode.equals(SET))) {
+                selectedSourceListeners.forEach(listener -> {
+                    listener.selectedSourcesUpdated(getSelectedSources(), eventSource);
+                    listener.lastSelectionEvent(currentSources, mode, eventSource);
+                });
+            }
+
+            viewer.requestRepaint();
+        }
+    }
+
+    public void selectedSourcesClear(String eventSource) {
+        processSelectionModificationEvent(new HashSet<>(), SET, eventSource);
+    }
+
+    public void selectedSourceAdd(Collection<SourceAndConverter<?>> sources, String eventSource) {
+        Set<SourceAndConverter<?>> sourcesSet = new HashSet<>(sources);
+        processSelectionModificationEvent(sourcesSet, ADD, eventSource);
+    }
+
+    public void selectedSourceRemove(Collection<SourceAndConverter<?>> sources, String eventSource) {
+        Set<SourceAndConverter<?>> sourcesSet = new HashSet<>(sources);
+        processSelectionModificationEvent(sourcesSet, REMOVE, eventSource);
+    }
+
+    // For convenience
+
+    public void selectedSourcesClear() {
+        selectedSourcesClear("API");
+    }
+
+    public void selectedSourceRemove(Collection<SourceAndConverter<?>> sources) {
+        selectedSourceRemove(sources,"API");
+    }
+
+    public void selectedSourceAdd(Collection<SourceAndConverter<?>> sources) {
+        selectedSourceAdd(sources, "API");
+    }
+
+    public void selectedSourceRemove(SourceAndConverter<?> source) {
+        Set<SourceAndConverter<?>> sourcesSet = new HashSet<>();
+        sourcesSet.add(source);
+        selectedSourceRemove(sourcesSet,"API");
+    }
+
+    public void selectedSourceAdd(SourceAndConverter<?> source) {
+        Set<SourceAndConverter<?>> sourcesSet = new HashSet<>();
+        sourcesSet.add(source);
+        selectedSourceAdd(sourcesSet, "API");
+    }
+
+    // Handles sources being removed programmatically are becoming invisible -> cleans selected sources, if necessary
+    @Override
+    public void viewerStateChanged(ViewerStateChange change) {
+        if (change.equals(NUM_SOURCES_CHANGED)||change.equals(VISIBILITY_CHANGED)) {
+            editorOverlay.updateBoxes();
+            // Removes potentially selected source which has been removed from bdv
+            Set<SourceAndConverter<?>> leftOvers = new HashSet<>();
+            leftOvers.addAll(selectedSources);
+            leftOvers.removeAll(viewer.state().getVisibleSources());
+            selectedSources.removeAll(leftOvers);
+            if (leftOvers.size()>0) {
+                processSelectionModificationEvent(leftOvers, REMOVE, change.toString());
+            }
+        }
     }
 
     // Listeners
@@ -121,11 +237,11 @@ public class SourceSelectorBehaviour {
     }
 
     public void addSelectedSourcesListener(SelectedSourcesListener selectedSourcesListener) {
-        editorOverlay.addSelectedSourcesListener(selectedSourcesListener);
+        selectedSourceListeners.add(selectedSourcesListener);
     }
 
     public void removeSelectedSourcesListener(SelectedSourcesListener selectedSourcesListener) {
-        editorOverlay.removeSelectedSourcesListener(selectedSourcesListener);
+        selectedSourceListeners.remove(selectedSourcesListener);
     }
 
 }
