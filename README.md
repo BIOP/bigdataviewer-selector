@@ -1,3 +1,4 @@
-Various tools and plugins for BigDataViewer handling in FIJI.
+# BigDataViewer Selector Module
 
+Extensible module to graphically or programmatically select sources present in BigDataViewer.
 
