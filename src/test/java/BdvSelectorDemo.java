@@ -3,9 +3,9 @@ import bdv.util.BdvHandle;
 import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
 import bdv.viewer.SourceAndConverter;
-import ch.epfl.biop.bdv.edit.SelectedSourcesListener;
-import ch.epfl.biop.bdv.edit.SourceSelectorBehaviour;
-import ch.epfl.biop.bdv.edit.ToggleListener;
+import ch.epfl.biop.bdv.select.SelectedSourcesListener;
+import ch.epfl.biop.bdv.select.SourceSelectorBehaviour;
+import ch.epfl.biop.bdv.select.ToggleListener;
 import ij.IJ;
 import ij.ImagePlus;
 import mpicbg.spim.data.SpimData;
@@ -26,22 +26,17 @@ import java.util.Collection;
 public class BdvSelectorDemo {
 
     static public void main(String... args) throws Exception {
-
+        // Creates a demo bdv frame with demo images
         BdvHandle bdvh = initAndShowSources();
 
-        // Inits this behaviour with a trigger input key that toggles on and off the selection mode
+        // Setup a source selection mode with a trigger input key that toggles it on and off
         SourceSelectorBehaviour ssb = new SourceSelectorBehaviour(bdvh, "E");
 
-        // Example of simple behaviours that can be added on top of the source selector
-        // adds adds an editor behaviour which only action is to remove the selected sources from a bdvhandle
-        addEditorBehaviours(bdvh, ssb);
-
-        // Adds message that respond to events - either GUI or programmatically triggered
+        // Adds a listener which displays the events - either GUI or programmatically triggered
         ssb.addSelectedSourcesListener(new SelectedSourcesListener() {
-
             @Override
             public void selectedSourcesUpdated(Collection<SourceAndConverter<?>> selectedSources, String triggerMode) {
-                bdvh.getViewerPanel().showMessage("Trigger: "+triggerMode);
+                bdvh.getViewerPanel().showMessage("Trigger : "+triggerMode);
                 bdvh.getViewerPanel().showMessage("Total Selected Sources : "+selectedSources.size());
             }
 
@@ -51,7 +46,12 @@ public class BdvSelectorDemo {
             }
         });
 
-        // Programmatic API Demo
+        // Example of simple behaviours that can be added on top of the source selector
+        // Here it adds an editor behaviour which only action is to remove the selected sources from the window
+        // When the delete key is pressed
+        addEditorBehaviours(bdvh, ssb);
+
+        // Programmatic API Demo : triggers a list of actions separated in time
         programmaticAPIDemo(bdvh, ssb);
     }
 
@@ -113,9 +113,11 @@ public class BdvSelectorDemo {
 
         editor.behaviour(delete, "remove-sources-from-bdv", new String[]{"DELETE"});
 
+        // One way to chain the behaviour : install and uninstall on source selector toggling:
+        // The delete key will act only when the source selection mode is on
         ssb.addToggleListener(new ToggleListener() {
             @Override
-            public void enable() {
+            public void isEnabled() {
                 bdvh.getViewerPanel().showMessage("Selection Mode Enable");
                 bdvh.getViewerPanel().showMessage(ssb.getSelectedSources().size()+" sources selected");
                 // Enable the editor behaviours when the selector is enabled
@@ -123,12 +125,11 @@ public class BdvSelectorDemo {
             }
 
             @Override
-            public void disable() {
+            public void isDisabled() {
+                bdvh.getViewerPanel().showMessage("Selection Mode Disable");
                 // Disable the editor behaviours the selector is disabled
                 bdvh.getTriggerbindings().removeInputTriggerMap("sources-editor");
                 bdvh.getTriggerbindings().removeBehaviourMap("sources-editor");
-
-                bdvh.getViewerPanel().showMessage("Selection Mode Disable");
             }
         });
     }
@@ -146,7 +147,6 @@ public class BdvSelectorDemo {
         ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources().get(1));
 
         Thread.sleep(1000);
-
 
         // and another one
         ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources().get(2));

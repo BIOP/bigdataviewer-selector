@@ -1,4 +1,4 @@
-package ch.epfl.biop.bdv.edit;
+package ch.epfl.biop.bdv.select;
 
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandle;
@@ -20,44 +20,70 @@ import java.util.concurrent.ConcurrentHashMap;
 import static bdv.viewer.ViewerStateChange.NUM_SOURCES_CHANGED;
 import static bdv.viewer.ViewerStateChange.VISIBILITY_CHANGED;
 
+/**
+ * Adds a selection sources mode in a {@link BdvHandle}
+ * The selection mode can be toggled programmatically or using a key bindings defined in the constructor of this class
+ *
+ * It is used in conjuncion with a BdvOverlay layer {@link SourceSelectorOverlay} which can be retrieved with
+ * {@link SourceSelectorBehaviour#getSourceSelectorOverlay()}
+ *
+ * The selections can be triggered by GUI actions in the linked {@link SourceSelectorOverlay} or
+ * directly programmatically
+ *
+ * The selected sources are unordered
+ *
+ * It is designed such as only visible sources can be selected - if source becomes invisible,
+ * then they are removed from the current selected. This is made to avoid that a removed Source is kept
+ * in memory while it is invisible or more importantly if it is removed from the BdvHandle.
+ *
+ * Limitation : supports 'Box' (3d RAI with an Affine Transform) sources - A WarpedSource will not be handled well without some extra effort for instance
+ *
+ * @author Nicolas Chiaruttini, BIOP, EPFL, 2020
+ */
+
 public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 
-    SourceSelectorOverlay editorOverlay;
-
-    final BdvHandle bdvh;
-
-    private final TriggerBehaviourBindings triggerbindings;
-
-    ViewerPanel viewer;
-
-    private static final String SOURCES_SELECTOR_MAP = "sources-selector";
-
-    private static final String SOURCES_SELECTOR_TOGGLE_MAP = "source-selector-toggle";
-
-    private final Behaviours behaviours;
-
-    BdvOverlaySource bos;
-
-    boolean isInstalled; // flag for the toggle action
-
-    List<ToggleListener> toggleListeners = new ArrayList<>();
+    final public static String SOURCES_SELECTOR_MAP = "sources-selector";
+    final public static String SOURCES_SELECTOR_TOGGLE_MAP = "source-selector-toggle";
 
     final public static String SET = "SET";
     final public static String ADD = "ADD";
     final public static String REMOVE = "REMOVE";
 
+    final SourceSelectorOverlay selectorOverlay;
+
+    BdvOverlaySource bos;
+
+    final BdvHandle bdvh;
+
+    final TriggerBehaviourBindings triggerbindings;
+
+    final ViewerPanel viewer;
+
+    final Behaviours behaviours;
+
+    boolean isInstalled; // flag for the toggle action
+
+    // Listeners list
+    List<ToggleListener> toggleListeners = new ArrayList<>();
+
     List<SelectedSourcesListener> selectedSourceListeners = new ArrayList<>();
 
-    protected Set<SourceAndConverter<?>> selectedSources = ConcurrentHashMap.newKeySet(); // To think ? Make a concurrent Keyset
+    protected Set<SourceAndConverter<?>> selectedSources = ConcurrentHashMap.newKeySet(); // Makes a concurrent set
 
+    /**
+     * Construct a SourceSelectorBehaviour
+     * @param bdvh BdvHandle associated to this behaviour
+     * @param triggerToggleSelector Trigger Input Toggle which will activate / deactivate this mode
+     */
     public SourceSelectorBehaviour(BdvHandle bdvh, String triggerToggleSelector) {
         this.bdvh = bdvh;
         this.triggerbindings = bdvh.getTriggerbindings();
         this.viewer = bdvh.getViewerPanel();
 
-        editorOverlay = new SourceSelectorOverlay(viewer, this);
+        selectorOverlay = new SourceSelectorOverlay(viewer, this);
 
-        ClickBehaviour toggleEditor = (x,y) -> {
+        ClickBehaviour toggleSelector = (x,y) -> {
             if (isInstalled) {
                 uninstall();
             } else {
@@ -66,59 +92,88 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         };
 
         Behaviours behavioursToggle = new Behaviours(new InputTriggerConfig(), "bdv");
-        behavioursToggle.behaviour(toggleEditor, SOURCES_SELECTOR_TOGGLE_MAP, triggerToggleSelector);
+        behavioursToggle.behaviour(toggleSelector, SOURCES_SELECTOR_TOGGLE_MAP, triggerToggleSelector);
         behavioursToggle.install(bdvh.getTriggerbindings(), "source-selector-toggle");
         behaviours = new Behaviours( new InputTriggerConfig(), "bdv" );
 
         viewer.state().changeListeners().add(this);
     }
 
+    /**
+     * Gets the overlay layer associated with the source selector
+     * @return
+     */
     public SourceSelectorOverlay getSourceSelectorOverlay() {
-        return editorOverlay;
+        return selectorOverlay;
     }
 
+    /**
+     *
+     * @return the BdhHandle associated to this Selector
+     */
     public BdvHandle getBdvHandle() {
         return bdvh;
     }
 
+    /**
+     * Activate the selection mode
+     */
     public synchronized void enable() {
         if (!isInstalled) {
             install();
         }
     }
 
+    /**
+     * Deactivate the selection mode
+     */
     public synchronized void disable() {
         if (isInstalled) {
             uninstall();
         }
     }
 
+    /**
+     * Completely disassociate the selector with this BdvHandle
+     * TODO safe in terms of freeing memory ?
+     */
     public void remove() {
-        triggerbindings.removeInputTriggerMap("source-selector-toggle");
-        triggerbindings.removeBehaviourMap("source-selector-toggle");
+        disable();
+        triggerbindings.removeInputTriggerMap(SOURCES_SELECTOR_TOGGLE_MAP);
+        triggerbindings.removeBehaviourMap(SOURCES_SELECTOR_TOGGLE_MAP);
     }
 
+    /**
+     * Private : call enable instead
+     */
     synchronized void install() {
         isInstalled = true;
-        editorOverlay.addSelectionBehaviours(behaviours);
+        selectorOverlay.addSelectionBehaviours(behaviours);
         triggerbindings.addBehaviourMap(SOURCES_SELECTOR_MAP, behaviours.getBehaviourMap());
         triggerbindings.addInputTriggerMap(SOURCES_SELECTOR_MAP, behaviours.getInputTriggerMap(), "transform", "bdv");
-        bos = BdvFunctions.showOverlay(editorOverlay, "Editor_Overlay", BdvOptions.options().addTo(bdvh));
+        bos = BdvFunctions.showOverlay(selectorOverlay, "Selector_Overlay", BdvOptions.options().addTo(bdvh));
         bdvh.getKeybindings().addInputMap("blocking-source-selector", new InputMap(), "bdv", "navigation");
-        toggleListeners.forEach(tl -> tl.enable());
+        toggleListeners.forEach(tl -> tl.isEnabled());
     }
 
+    /**
+     * Private : call disable instead
+     */
     synchronized void uninstall() {
         isInstalled = false;
         bos.removeFromBdv();
         triggerbindings.removeBehaviourMap( SOURCES_SELECTOR_MAP );
         triggerbindings.removeInputTriggerMap( SOURCES_SELECTOR_MAP );
         bdvh.getKeybindings().removeInputMap("blocking-source-selector");
-        toggleListeners.forEach(tl -> tl.disable());
+        toggleListeners.forEach(tl -> tl.isDisabled());
     }
 
-    // API Control Selected Sources
+    // API to Control Selected Sources
 
+    /**
+     *
+     * @return current selected source
+     */
     public Set<SourceAndConverter<?>> getSelectedSources() {
         synchronized (selectedSources) {
             HashSet<SourceAndConverter<?>> copySelectedSources = new HashSet<>();
@@ -127,9 +182,15 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         }
     }
 
+    /**
+     * Main function coordinating events : it is called by all the other functions to process the modifications
+     * of the selected sources
+     * @param currentSources set of sources involved in the current modification
+     * @param mode  see SET ADD REMOVE
+     * @param eventSource a String which can indicate the origin of the modification
+     */
     public void processSelectionModificationEvent(Set<SourceAndConverter<?>> currentSources, String mode, String eventSource) {
         synchronized (selectedSources) {
-
             int initialSize = selectedSources.size();
             switch(mode) {
                 case SET :
@@ -138,7 +199,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
                     break;
                 case SourceSelectorBehaviour.ADD :
                     // Sanity check : only visible sources can be selected
-                    if (currentSources.stream().anyMatch(sac -> !bdvh.getViewerPanel().state().isSourceVisible(sac))) {
+                    if (currentSources.stream().anyMatch(sac -> !viewer.state().isSourceVisible(sac))) {
                         System.err.println("Error : attempt to select a source which is not visible - selection ignored");
                         return;
                     }
@@ -184,8 +245,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         processSelectionModificationEvent(sourcesSet, REMOVE, eventSource);
     }
 
-    // For convenience
-
+    // For convenience : single source methods
     public void selectedSourcesClear() {
         selectedSourcesClear("API");
     }
@@ -214,7 +274,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
     @Override
     public void viewerStateChanged(ViewerStateChange change) {
         if (change.equals(NUM_SOURCES_CHANGED)||change.equals(VISIBILITY_CHANGED)) {
-            editorOverlay.updateBoxes();
+            selectorOverlay.updateBoxes();
             // Removes potentially selected source which has been removed from bdv
             Set<SourceAndConverter<?>> leftOvers = new HashSet<>();
             leftOvers.addAll(selectedSources);
@@ -226,20 +286,34 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         }
     }
 
-    // Listeners
-
+    /**
+     * Adds a toggle listener see {@link ToggleListener}
+     * @param toggleListener
+     */
     public void addToggleListener(ToggleListener toggleListener) {
         toggleListeners.add(toggleListener);
     }
 
+    /**
+     * Removes a toggle listener, {@link ToggleListener}
+     * @param toggleListener
+     */
     public void removeToggleListener(ToggleListener toggleListener) {
         toggleListeners.remove(toggleListener);
     }
 
+    /**
+     * Adds a selected source listener, see {@link SelectedSourcesListener}
+     * @param selectedSourcesListener
+     */
     public void addSelectedSourcesListener(SelectedSourcesListener selectedSourcesListener) {
         selectedSourceListeners.add(selectedSourcesListener);
     }
 
+    /**
+     * Removes a selected source listener, see {@link SelectedSourcesListener}
+     * @param selectedSourcesListener
+     */
     public void removeSelectedSourcesListener(SelectedSourcesListener selectedSourcesListener) {
         selectedSourceListeners.remove(selectedSourcesListener);
     }

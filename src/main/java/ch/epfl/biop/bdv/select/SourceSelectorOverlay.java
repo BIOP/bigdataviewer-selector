@@ -1,10 +1,9 @@
-package ch.epfl.biop.bdv.edit;
+package ch.epfl.biop.bdv.select;
 
 import bdv.tools.boundingbox.TransformedBox;
 import bdv.util.BdvOverlay;
 import bdv.viewer.SourceAndConverter;
 import bdv.viewer.ViewerPanel;
-import bdv.viewer.ViewerStateChange;
 import bdv.tools.boundingbox.RenderBoxHelper;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.RealInterval;
@@ -17,11 +16,38 @@ import java.awt.geom.GeneralPath;
 import java.util.*;
 import java.util.List;
 
-import static bdv.viewer.ViewerStateChange.NUM_SOURCES_CHANGED;
-import static bdv.viewer.ViewerStateChange.VISIBILITY_CHANGED;
-
 /**
- * Works with {}
+ * Works with {@link SourceSelectorBehaviour}
+ *
+ * Displays box overlays on top of visible sources of all visible {@link SourceAndConverter} of a {@link ViewerPanel}
+ *
+ * The coloring differs depending on the state (selected or not selected)
+ *
+ * An inner interface {@link OverlayStyle} is used to define how the overlay box are colored.
+ * The coloring can be modified with the {@link SourceSelectorOverlay#getStyles()} function
+ * and by modify using the values contained in "DEFAULT" and "SELECTED"
+ *
+ * GUI functioning:
+ *
+ * The user can draw a rectangle and all sources which interesects this rectangle
+ * will be involved in the next selection change event.
+ * Either the user was holding no extra key:
+ * - the involved sources will define the new selection set
+ * The user was holding CTRL:
+ * - the involved sources will be removed from the current selection set
+ * The user was holding SHIFT:
+ * - the involved sources are added to the current selection set
+ * Note : changing the key pressing DURING the rectangle drawing will not be taken into account,
+ * contrary to an expected standard behaviour TODO : can this be improved ?
+ *
+ * Note : The user can perform a single click as well with the modifier keys, no need to drag
+ * this is because a single click also triggers a {@link DragBehaviour}
+ *
+ * Note : the overlay can be very slow to draw - because it's java graphics 2D... It's
+ * especially visible is the zoom is very big... Clipping is badly done TODO ?
+ *
+ * @author Nicolas Chiaruttini, BIOP, EPFL, 2020
+ *
  */
 
 public class SourceSelectorOverlay extends BdvOverlay {
