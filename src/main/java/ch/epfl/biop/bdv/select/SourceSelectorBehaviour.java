@@ -16,6 +16,7 @@ import org.scijava.ui.behaviour.util.TriggerBehaviourBindings;
 import javax.swing.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static bdv.viewer.ViewerStateChange.NUM_SOURCES_CHANGED;
 import static bdv.viewer.ViewerStateChange.VISIBILITY_CHANGED;
@@ -184,6 +185,11 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         }
     }
 
+    private Set<SourceAndConverter<?>> removeOverlaySources(Set<SourceAndConverter<?>> in) {
+        // HACK TODO : better filtering
+        return in.stream().filter(sac -> sac.getSpimSource().getSource(viewer.state().getCurrentTimepoint(),0)!=null).collect(Collectors.toSet());
+    }
+
     /**
      * Main function coordinating events : it is called by all the other functions to process the modifications
      * of the selected sources
@@ -202,7 +208,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
                         return;
                     }
                     selectedSources.clear();
-                    selectedSources.addAll(currentSources);
+                    selectedSources.addAll(removeOverlaySources(currentSources));
                     break;
                 case SourceSelectorBehaviour.ADD :
                     // Sanity check : only visible sources can be selected
@@ -210,7 +216,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
                         System.err.println("Error : attempt to select a source which is not visible - selection ignored");
                         return;
                     }
-                    selectedSources.addAll(currentSources);
+                    selectedSources.addAll(removeOverlaySources(currentSources));
                     break;
                 case SourceSelectorBehaviour.REMOVE :
                     selectedSources.removeAll(currentSources);
@@ -223,7 +229,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
             if (currentSources.size()!=0) {
                 selectedSourceListeners.forEach(listener -> {
                     listener.selectedSourcesUpdated(getSelectedSources(), eventSource);
-                    listener.lastSelectionEvent(currentSources, mode, eventSource);
+                    listener.lastSelectionEvent(removeOverlaySources(currentSources), mode, eventSource);
                 });
             }
 
@@ -286,7 +292,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
             Set<SourceAndConverter<?>> leftOvers = new HashSet<>();
             leftOvers.addAll(selectedSources);
             leftOvers.removeAll(viewer.state().getVisibleSources());
-            selectedSources.removeAll(leftOvers);
+            //selectedSources.removeAll(leftOvers);
             if (leftOvers.size()>0) {
                 processSelectionModificationEvent(leftOvers, REMOVE, change.toString());
             }

@@ -8,6 +8,7 @@ import bdv.tools.boundingbox.RenderBoxHelper;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.realtransform.AffineTransform3D;
+import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.DragBehaviour;
 import org.scijava.ui.behaviour.util.Behaviours;
 
@@ -80,6 +81,8 @@ public class SourceSelectorOverlay extends BdvOverlay {
         behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.SET ), "select-set-sources", new String[] { "button1" });
         behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.ADD ), "select-add-sources", new String[] { "shift button1" });
         behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.REMOVE ), "select-remove-sources", new String[] { "ctrl button1" });
+        // Ctrl + A : select all sources
+        behaviours.behaviour((ClickBehaviour) (x,y) -> ssb.selectedSourceAdd(viewer.state().getVisibleSources()), "select-all-visible-sources", new String[] { "ctrl A" } );
     }
 
     public Map<String, OverlayStyle> getStyles() {
@@ -190,7 +193,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
     public void updateBoxes() {
         sourcesBoxOverlay.clear();
         for (SourceAndConverter sac : viewer.state().getVisibleSources()) {
-            if (sac.getSpimSource().getSource(0,0)!=null) { // TODO : fix hack to avoid dirty overlay filter
+            if (sac.getSpimSource().getSource(viewer.state().getCurrentTimepoint(),0)!=null) { // TODO : fix hack to avoid dirty overlay filter
                 sourcesBoxOverlay.add(new SourceSelectorOverlay.SourceBoxOverlay(sac));
             }
         }
