@@ -21,9 +21,9 @@ public interface SelectedSourcesListener {
 
     /**
      * Function triggered second and which specifies what sources have had their status changed
-     * This makes is easier to follow the successive steps during consecutive selection events
+     * This makes it easier to follow the successive steps during consecutive selection events
      * @param lastSelectedSources : the list of sources which have been involved in the last selection event
-     * @param mode : should be {@link SourceSelectorBehaviour#SET}, {@link SourceSelectorBehaviour#ADD}, {@link SourceSelectorBehaviour#REMOVE}
+     * @param mode : should be {@link SourceSelectorBehaviour#SET} or {@link SourceSelectorBehaviour#ADD} or {@link SourceSelectorBehaviour#REMOVE}
      * @param triggerMode string which indicates the origin of the event that triggered a change see {@link SourceSelectorBehaviour#processSelectionModificationEvent(Set, String, String)}
      */
     void lastSelectionEvent(Collection<SourceAndConverter<?>> lastSelectedSources, String mode, String triggerMode);

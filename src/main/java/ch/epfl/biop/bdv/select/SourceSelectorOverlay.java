@@ -8,6 +8,7 @@ import bdv.tools.boundingbox.RenderBoxHelper;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.realtransform.AffineTransform3D;
+import org.scijava.ui.behaviour.Behaviour;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.DragBehaviour;
 import org.scijava.ui.behaviour.util.Behaviours;
@@ -399,7 +400,8 @@ public class SourceSelectorOverlay extends BdvOverlay {
         @Override
         public void drag(int x, int y) {
             updateCurrentSelection(x,y);
-            viewer.paint(); // TODO : understand how to remove it from here ?
+            viewer.getDisplay().repaint();
+            //viewer.paint(); // TODO : understand how to remove it from here ?
         }
 
         @Override

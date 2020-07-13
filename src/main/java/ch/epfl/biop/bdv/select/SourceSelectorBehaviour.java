@@ -136,6 +136,10 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         }
     }
 
+    public synchronized boolean isEnabled() {
+        return isInstalled;
+    }
+
     /**
      * Completely disassociate the selector with this BdvHandle
      * TODO safe in terms of freeing memory ?
@@ -157,6 +161,10 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         bos = BdvFunctions.showOverlay(selectorOverlay, "Selector_Overlay", BdvOptions.options().addTo(bdvh));
         bdvh.getKeybindings().addInputMap("blocking-source-selector", new InputMap(), "bdv", "navigation");
         toggleListeners.forEach(tl -> tl.isEnabled());
+    }
+
+    public void addBehaviour(Behaviour behaviour, String behaviourName, String[] triggers) {
+        behaviours.behaviour(behaviour, behaviourName, triggers);
     }
 
     /**
