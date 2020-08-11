@@ -44,7 +44,7 @@
 		<developer>
 			<id>oburri</id>
 			<name>Olivier Burri</name>
-			<url>http://biop.epfl.ch/INFO_Facility.html</url>
+			<url>https://biop.epfl.ch/INFO_Facility.html</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -58,7 +58,7 @@
 		<developer>
 			<id>nicokiaru</id>
 			<name>Nicolas Chiaruttini</name>
-			<url>http://imagej.net/User:NicoKiaru</url>
+			<url>https://imagej.net/User:NicoKiaru</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -72,7 +72,7 @@
 		<developer>
 			<id>romainGuiet</id>
 			<name>Romain Guiet</name>
-			<url>http://biop.epfl.ch/INFO_Facility.html</url>
+			<url>https://biop.epfl.ch/INFO_Facility.html</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -87,19 +87,19 @@
 	<contributors>
 		<contributor>
 			<name>Romain Guiet</name>
-			<url>http://biop.epfl.ch/INFO_Facility.html</url>
+			<url>https://biop.epfl.ch/INFO_Facility.html</url>
 			<roles><role>founder</role></roles>
 			<properties><id>romainGuiet</id></properties>
 		</contributor>
 		<contributor>
 			<name>Nicolas Chiaruttini</name>
-			<url>http://biop.epfl.ch/INFO_Facility.html</url>
+			<url>https://biop.epfl.ch/INFO_Facility.html</url>
 			<roles><role>founder</role></roles>
 			<properties><id>NicoKiaru</id></properties>
 		</contributor>
 		<contributor>
 			<name>Olivier Burri</name>
-			<url>http://biop.epfl.ch/INFO_Facility.html</url>
+			<url>https://biop.epfl.ch/INFO_Facility.html</url>
 			<roles><role>founder</role></roles>
 			<properties><id>oburri</id></properties>
 		</contributor>
@@ -113,19 +113,20 @@
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:git://github.com/</connection>
-		<developerConnection>scm:git:git@github.com:</developerConnection>
+		<connection>scm:git:git://github.com/NicoKiaru/bigdataviewer-selector</connection>
+		<developerConnection>scm:git:git@github.com:NicoKiaru/bigdataviewer-selector</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://github.com/</url>
+		<url>https://github.com/NicoKiaru/bigdataviewer-selector</url>
 	</scm>
 	
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url />
+		<url>https://github.com/NicoKiaru/bigdataviewer-selector/issues</url>
 	</issueManagement>
 
 	<ciManagement>
-		<system>None</system>
+		<system>Travis CI</system>
+		<url>https://travis-ci.com/NicoKiaru/bigdataviewer-selector</url>
 	</ciManagement>
 
 	<properties>
