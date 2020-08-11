@@ -1,4 +1,4 @@
-[![](https://travis-ci.com/github/NicoKiaru/bigdataviewer-selector)
+[![](https://travis-ci.com/github/NicoKiaru/bigdataviewer-selector)]
 
 # BigDataViewer Selector Module
 
