@@ -244,13 +244,6 @@ public class SourceSelectorOverlay extends BdvOverlay {
                 if ((rectBounds.y+rectBounds.height>0)&&(rectBounds.y<canvasHeight)) {
                     graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 
-                    graphics.setStroke( os.getNormalStroke() );
-                    graphics.setPaint( os.getBackColor() );
-                    graphics.draw( back );
-
-                    graphics.setPaint( os.getFrontColor() );
-                    graphics.draw( front );
-
                     graphics.setPaint( os.getIntersectionFillColor() );
                     graphics.fill( intersection );
 
