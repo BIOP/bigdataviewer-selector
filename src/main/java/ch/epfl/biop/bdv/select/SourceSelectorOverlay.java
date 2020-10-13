@@ -134,7 +134,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
         return new Rectangle(x0, y0, w, h);
     }
 
-    Set<SourceAndConverter<?>> getLastSelectedSources() {
+    synchronized Set<SourceAndConverter<?>> getLastSelectedSources() {
         Set<SourceAndConverter<?>> lastSelected = new HashSet<>();
 
         final RenderBoxHelper rbh = new RenderBoxHelper();
@@ -191,7 +191,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
         this.canvasHeight = height;
     }
 
-    public void updateBoxes() {
+    public synchronized void updateBoxes() {
         sourcesBoxOverlay.clear();
         for (SourceAndConverter sac : viewer.state().getVisibleSources()) {
             if (sac.getSpimSource().getSource(viewer.state().getCurrentTimepoint(),0)!=null) { // TODO : fix hack to avoid dirty overlay filter
