@@ -115,6 +115,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/NicoKiaru/bigdataviewer-selector</connection>
 		<developerConnection>scm:git:git@github.com:NicoKiaru/bigdataviewer-selector</developerConnection>
+		<tag>HEAD</tag>
 		<url>https://github.com/NicoKiaru/bigdataviewer-selector</url>
 	</scm>
 	
