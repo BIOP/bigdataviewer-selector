@@ -192,14 +192,18 @@ public class SourceSelectorOverlay extends BdvOverlay {
     }
 
     public void updateBoxes() {
-        synchronized (sourcesBoxOverlay) {
-            sourcesBoxOverlay.clear();
-            for (SourceAndConverter sac : viewer.state().getVisibleSources()) {
-                if (sac.getSpimSource().getSource(viewer.state().getCurrentTimepoint(), 0) != null) { // TODO : fix hack to avoid dirty overlay filter
-                    sourcesBoxOverlay.add(new SourceSelectorOverlay.SourceBoxOverlay(sac));
-                }
+        List<SourceBoxOverlay> newSourcesBoxOverlay = new ArrayList<>();
+
+        for (SourceAndConverter sac : viewer.state().getVisibleSources()) {
+            if (sac.getSpimSource().getSource(viewer.state().getCurrentTimepoint(), 0) != null) { // TODO : fix hack to avoid dirty overlay filter
+                newSourcesBoxOverlay.add(new SourceSelectorOverlay.SourceBoxOverlay(sac));
             }
         }
+
+        synchronized (sourcesBoxOverlay) {
+            sourcesBoxOverlay = newSourcesBoxOverlay;
+        }
+
     }
 
     class SourceBoxOverlay implements TransformedBox {
