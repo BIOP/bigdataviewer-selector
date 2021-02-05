@@ -101,7 +101,7 @@ public class BdvSelectorDemo {
         m.scale(0.75);
         m.translate(150,100,0);
 
-        bdvh.getViewerPanel().setCurrentViewerTransform(m);
+        bdvh.getViewerPanel().state().setViewerTransform(m);
         bdvh.getViewerPanel().requestRepaint();
 
         return bdvh;
@@ -112,7 +112,7 @@ public class BdvSelectorDemo {
 
         ClickBehaviour delete = (x,y) -> bdvh.getViewerPanel().state().removeSources(ssb.getSelectedSources());
 
-        editor.behaviour(delete, "remove-sources-from-bdv", new String[]{"DELETE"});
+        editor.behaviour(delete, "remove-sources-from-bdv", "DELETE");
 
         // One way to chain the behaviour : install and uninstall on source selector toggling:
         // The delete key will act only when the source selection mode is on

@@ -8,7 +8,6 @@ import bdv.tools.boundingbox.RenderBoxHelper;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.realtransform.AffineTransform3D;
-import org.scijava.ui.behaviour.Behaviour;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.DragBehaviour;
 import org.scijava.ui.behaviour.util.Behaviours;
@@ -79,11 +78,11 @@ public class SourceSelectorOverlay extends BdvOverlay {
     }
 
     protected void addSelectionBehaviours(Behaviours behaviours) {
-        behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.SET ), "select-set-sources", new String[] { "button1" });
-        behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.ADD ), "select-add-sources", new String[] { "shift button1" });
-        behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.REMOVE ), "select-remove-sources", new String[] { "ctrl button1" });
+        behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.SET ), "select-set-sources", "button1");
+        behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.ADD ), "select-add-sources", "shift button1");
+        behaviours.behaviour( new RectangleSelectSourcesBehaviour( SourceSelectorBehaviour.REMOVE ), "select-remove-sources", "ctrl button1");
         // Ctrl + A : select all sources
-        behaviours.behaviour((ClickBehaviour) (x,y) -> ssb.selectedSourceAdd(viewer.state().getVisibleSources()), "select-all-visible-sources", new String[] { "ctrl A" } );
+        behaviours.behaviour((ClickBehaviour) (x,y) -> ssb.selectedSourceAdd(viewer.state().getVisibleSources()), "select-all-visible-sources", "ctrl A");
     }
 
     public Map<String, OverlayStyle> getStyles() {
@@ -106,10 +105,9 @@ public class SourceSelectorOverlay extends BdvOverlay {
         yCurrentSelectEnd = y;
         isCurrentlySelecting = false;
         // Selection is done : but we need to access the trigger keys to understand what's happening
-        Set<SourceAndConverter<?>> currentSelection = this.getLastSelectedSources();
-
+        //Set<SourceAndConverter<?>> currentSelection =
+        this.getLastSelectedSources();
         ssb.processSelectionModificationEvent(getLastSelectedSources(), mode, "SelectorOverlay");
-
     }
 
     Rectangle getCurrentSelectionRectangle() {
@@ -145,13 +143,12 @@ public class SourceSelectorOverlay extends BdvOverlay {
             AffineTransform3D viewerTransform = new AffineTransform3D();
             viewer.state().getViewerTransform(viewerTransform);
             AffineTransform3D transform = new AffineTransform3D();
-            synchronized ( viewerTransform )
-            {
-                sbo.getTransform( transform );
-                transform.preConcatenate( viewerTransform );
-            }
-            final double ox = canvasWidth / 2;
-            final double oy = canvasHeight / 2;
+
+            sbo.getTransform( transform );
+            transform.preConcatenate( viewerTransform );
+
+            final double ox = canvasWidth / 2.0;
+            final double oy = canvasHeight / 2.0;
 
             rbh.setOrigin( ox, oy );
             rbh.setScale( 1 );
@@ -160,13 +157,15 @@ public class SourceSelectorOverlay extends BdvOverlay {
             final GeneralPath back = new GeneralPath();
             final GeneralPath intersection = new GeneralPath();
 
-            rbh.renderBox( sbo.getInterval(), transform, front, back, intersection );
+            if (sbo.getInterval()!=null) {
+                rbh.renderBox(sbo.getInterval(), transform, front, back, intersection);
+                Rectangle r = getCurrentSelectionRectangle();
 
-            Rectangle r = getCurrentSelectionRectangle();
-
-            if (intersection.intersects(r)||intersection.contains(r)) {
-                lastSelected.add(sbo.sac);
+                if (intersection.intersects(r) || intersection.contains(r)) {
+                    lastSelected.add(sbo.sac);
+                }
             }
+
         }
         return lastSelected;
     }
@@ -231,15 +230,15 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
             final RealInterval interval = getInterval();
             if (interval!=null) {
-                final double ox = canvasWidth / 2;
-                final double oy = canvasHeight / 2;
+                final double ox = canvasWidth / 2.0;
+                final double oy = canvasHeight / 2.0;
                 AffineTransform3D viewerTransform = new AffineTransform3D();
                 viewer.state().getViewerTransform(viewerTransform);
                 AffineTransform3D transform = new AffineTransform3D();
-                synchronized (viewerTransform) {
-                    getTransform(transform);
-                    transform.preConcatenate(viewerTransform);
-                }
+
+                getTransform(transform);
+                transform.preConcatenate(viewerTransform);
+
                 rbh.setOrigin(ox, oy);
                 rbh.setScale(1);
 
@@ -298,7 +297,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
     }
 
-    public class DefaultOverlayStyle implements SourceSelectorOverlay.OverlayStyle {
+    public static class DefaultOverlayStyle implements SourceSelectorOverlay.OverlayStyle {
         Color backColor = new Color( 0x00994499 );
 
         Color frontColor = new Color(0x5D46B6);
@@ -338,7 +337,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
         }
     }
 
-    public class SelectedOverlayStyle implements SourceSelectorOverlay.OverlayStyle {
+    public static class SelectedOverlayStyle implements SourceSelectorOverlay.OverlayStyle {
         Color backColor = new Color(0xF7BF18);
 
         Color frontColor = new Color(0xC7F718);

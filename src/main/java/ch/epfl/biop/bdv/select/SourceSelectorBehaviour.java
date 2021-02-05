@@ -18,8 +18,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static bdv.viewer.ViewerStateChange.NUM_SOURCES_CHANGED;
-import static bdv.viewer.ViewerStateChange.VISIBILITY_CHANGED;
+import static bdv.viewer.ViewerStateChange.*;
 
 /**
  * Adds a selection sources mode in a {@link BdvHandle}
@@ -72,7 +71,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 
     List<SelectedSourcesListener> selectedSourceListeners = new ArrayList<>();
 
-    protected Set<SourceAndConverter<?>> selectedSources = ConcurrentHashMap.newKeySet(); // Makes a concurrent set
+    protected final Set<SourceAndConverter<?>> selectedSources = ConcurrentHashMap.newKeySet(); // Makes a concurrent set
 
     /**
      * Construct a SourceSelectorBehaviour
@@ -104,7 +103,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 
     /**
      * Gets the overlay layer associated with the source selector
-     * @return
+     * @return the selector overlay
      */
     public SourceSelectorOverlay getSourceSelectorOverlay() {
         return selectorOverlay;
@@ -164,7 +163,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         bdvh.getViewerPanel().state().setNumTimepoints(nTimePoints);
         bdvh.getViewerPanel().state().setCurrentTimepoint(currentTimePoint);
         bdvh.getKeybindings().addInputMap("blocking-source-selector", new InputMap(), "bdv", "navigation");
-        toggleListeners.forEach(tl -> tl.isEnabled());
+        toggleListeners.forEach(ToggleListener::isEnabled);
     }
 
     public void addBehaviour(Behaviour behaviour, String behaviourName, String[] triggers) {
@@ -184,7 +183,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         triggerbindings.removeBehaviourMap( SOURCES_SELECTOR_MAP );
         triggerbindings.removeInputTriggerMap( SOURCES_SELECTOR_MAP );
         bdvh.getKeybindings().removeInputMap("blocking-source-selector");
-        toggleListeners.forEach(tl -> tl.isDisabled());
+        toggleListeners.forEach(ToggleListener::isDisabled);
     }
 
     // API to Control Selected Sources
@@ -195,9 +194,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
      */
     public Set<SourceAndConverter<?>> getSelectedSources() {
         synchronized (selectedSources) {
-            HashSet<SourceAndConverter<?>> copySelectedSources = new HashSet<>();
-            copySelectedSources.addAll(selectedSources);
-            return copySelectedSources;
+            return new HashSet<>(selectedSources);
         }
     }
 
@@ -305,19 +302,21 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         if (change.equals(NUM_SOURCES_CHANGED)||change.equals(VISIBILITY_CHANGED)) {
             selectorOverlay.updateBoxes();
             // Removes potentially selected source which has been removed from bdv
-            Set<SourceAndConverter<?>> leftOvers = new HashSet<>();
-            leftOvers.addAll(selectedSources);
+            Set<SourceAndConverter<?>> leftOvers = new HashSet<>(selectedSources);
             leftOvers.removeAll(viewer.state().getVisibleSources());
             //selectedSources.removeAll(leftOvers);
             if (leftOvers.size()>0) {
                 processSelectionModificationEvent(leftOvers, REMOVE, change.toString());
             }
         }
+        if (change.equals(CURRENT_TIMEPOINT_CHANGED)) {
+            selectorOverlay.updateBoxes();
+        }
     }
 
     /**
      * Adds a toggle listener see {@link ToggleListener}
-     * @param toggleListener
+     * @param toggleListener toggle listener
      */
     public void addToggleListener(ToggleListener toggleListener) {
         toggleListeners.add(toggleListener);
@@ -325,7 +324,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 
     /**
      * Removes a toggle listener, {@link ToggleListener}
-     * @param toggleListener
+     * @param toggleListener toggle listener
      */
     public void removeToggleListener(ToggleListener toggleListener) {
         toggleListeners.remove(toggleListener);
@@ -333,7 +332,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 
     /**
      * Adds a selected source listener, see {@link SelectedSourcesListener}
-     * @param selectedSourcesListener
+     * @param selectedSourcesListener selected sources listener
      */
     public void addSelectedSourcesListener(SelectedSourcesListener selectedSourcesListener) {
         selectedSourceListeners.add(selectedSourcesListener);
@@ -341,7 +340,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 
     /**
      * Removes a selected source listener, see {@link SelectedSourcesListener}
-     * @param selectedSourcesListener
+     * @param selectedSourcesListener selected sources listener
      */
     public void removeSelectedSourcesListener(SelectedSourcesListener selectedSourcesListener) {
         selectedSourceListeners.remove(selectedSourcesListener);
