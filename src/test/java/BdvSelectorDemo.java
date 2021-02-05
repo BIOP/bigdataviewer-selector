@@ -28,6 +28,7 @@ public class BdvSelectorDemo {
     static public void main(String... args) throws Exception {
         // Creates a demo bdv frame with demo images
         BdvHandle bdvh = initAndShowSources();
+        bdvh.getViewerPanel().setNumTimepoints(10);
 
         // Setup a source selection mode with a trigger input key that toggles it on and off
         SourceSelectorBehaviour ssb = new SourceSelectorBehaviour(bdvh, "E");

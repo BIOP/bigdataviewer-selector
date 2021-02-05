@@ -158,7 +158,11 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
         selectorOverlay.addSelectionBehaviours(behaviours);
         triggerbindings.addBehaviourMap(SOURCES_SELECTOR_MAP, behaviours.getBehaviourMap());
         triggerbindings.addInputTriggerMap(SOURCES_SELECTOR_MAP, behaviours.getInputTriggerMap(), "transform", "bdv");
+        int nTimePoints = bdvh.getViewerPanel().state().getNumTimepoints();
+        int currentTimePoint = bdvh.getViewerPanel().state().getCurrentTimepoint();
         bos = BdvFunctions.showOverlay(selectorOverlay, "Selector_Overlay", BdvOptions.options().addTo(bdvh));
+        bdvh.getViewerPanel().state().setNumTimepoints(nTimePoints);
+        bdvh.getViewerPanel().state().setCurrentTimepoint(currentTimePoint);
         bdvh.getKeybindings().addInputMap("blocking-source-selector", new InputMap(), "bdv", "navigation");
         toggleListeners.forEach(tl -> tl.isEnabled());
     }
@@ -172,7 +176,11 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
      */
     synchronized void uninstall() {
         isInstalled = false;
+        int nTimePoints = bdvh.getViewerPanel().state().getNumTimepoints();
+        int currentTimePoint = bdvh.getViewerPanel().state().getCurrentTimepoint();
         bos.removeFromBdv();
+        bdvh.getViewerPanel().state().setNumTimepoints(nTimePoints);
+        bdvh.getViewerPanel().state().setCurrentTimepoint(currentTimePoint);
         triggerbindings.removeBehaviourMap( SOURCES_SELECTOR_MAP );
         triggerbindings.removeInputTriggerMap( SOURCES_SELECTOR_MAP );
         bdvh.getKeybindings().removeInputMap("blocking-source-selector");

@@ -230,32 +230,33 @@ public class SourceSelectorOverlay extends BdvOverlay {
             final GeneralPath intersection = new GeneralPath();
 
             final RealInterval interval = getInterval();
-            final double ox = canvasWidth / 2;
-            final double oy = canvasHeight / 2;
-            AffineTransform3D viewerTransform = new AffineTransform3D();
-            viewer.state().getViewerTransform(viewerTransform);
-            AffineTransform3D transform = new AffineTransform3D();
-            synchronized ( viewerTransform )
-            {
-                getTransform( transform );
-                transform.preConcatenate( viewerTransform );
-            }
-            rbh.setOrigin( ox, oy );
-            rbh.setScale( 1 );
+            if (interval!=null) {
+                final double ox = canvasWidth / 2;
+                final double oy = canvasHeight / 2;
+                AffineTransform3D viewerTransform = new AffineTransform3D();
+                viewer.state().getViewerTransform(viewerTransform);
+                AffineTransform3D transform = new AffineTransform3D();
+                synchronized (viewerTransform) {
+                    getTransform(transform);
+                    transform.preConcatenate(viewerTransform);
+                }
+                rbh.setOrigin(ox, oy);
+                rbh.setScale(1);
 
-            rbh.renderBox( interval, transform, front, back, intersection );
+                rbh.renderBox(interval, transform, front, back, intersection);
 
-            Rectangle rectBounds = intersection.getBounds();
-            if ((rectBounds.x+rectBounds.width>0)&&(rectBounds.x<canvasWidth)) {
-                if ((rectBounds.y+rectBounds.height>0)&&(rectBounds.y<canvasHeight)) {
-                    graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+                Rectangle rectBounds = intersection.getBounds();
+                if ((rectBounds.x + rectBounds.width > 0) && (rectBounds.x < canvasWidth)) {
+                    if ((rectBounds.y + rectBounds.height > 0) && (rectBounds.y < canvasHeight)) {
+                        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                    graphics.setPaint( os.getIntersectionFillColor() );
-                    graphics.fill( intersection );
+                        graphics.setPaint(os.getIntersectionFillColor());
+                        graphics.fill(intersection);
 
-                    graphics.setPaint( os.getIntersectionColor() );
-                    graphics.setStroke( os.getIntersectionStroke() );
-                    graphics.draw( intersection );
+                        graphics.setPaint(os.getIntersectionColor());
+                        graphics.setStroke(os.getIntersectionStroke());
+                        graphics.draw(intersection);
+                    }
                 }
             }
 
@@ -264,8 +265,11 @@ public class SourceSelectorOverlay extends BdvOverlay {
         @Override
         public RealInterval getInterval() {
             long[] dims = new long[3];
-            sac.getSpimSource().getSource(viewer.state().getCurrentTimepoint(),0).dimensions(dims);
-            return new FinalRealInterval(new double[]{-0.5,-0.5,-0.5}, new double[]{dims[0]-0.5, dims[1]-0.5, dims[2]-0.5});
+            int currentTimePoint = viewer.state().getCurrentTimepoint();
+            if (sac.getSpimSource().isPresent(currentTimePoint)) {
+                sac.getSpimSource().getSource(currentTimePoint, 0).dimensions(dims);
+                return new FinalRealInterval(new double[]{-0.5, -0.5, -0.5}, new double[]{dims[0] - 0.5, dims[1] - 0.5, dims[2] - 0.5});
+            } else return null;
         }
 
         @Override
