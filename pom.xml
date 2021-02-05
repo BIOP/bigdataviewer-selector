@@ -23,7 +23,7 @@
 
 	<groupId>ch.epfl.biop</groupId>
 	<artifactId>bigdataviewer-selector</artifactId>
-	<version>0.1.8-SNAPSHOT</version>
+	<version>0.1.8</version>
 
 	<name>Selector For BigDataViewer</name>
 	<description>Selector Behaviours for BigDataViewer</description>
@@ -116,7 +116,7 @@
 		<connection>scm:git:git://github.com/NicoKiaru/bigdataviewer-selector</connection>
 		<developerConnection>scm:git:git@github.com:NicoKiaru/bigdataviewer-selector</developerConnection>
 		<url>https://github.com/NicoKiaru/bigdataviewer-selector</url>
-	  <tag>HEAD</tag>
+	  <tag>bigdataviewer-selector-0.1.8</tag>
   </scm>
 	
 	<issueManagement>
