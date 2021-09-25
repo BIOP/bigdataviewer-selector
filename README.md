@@ -1,4 +1,4 @@
-[![](https://travis-ci.com/NicoKiaru/bigdataviewer-selector.svg?branch=master)](https://travis-ci.com/NicoKiaru/bigdataviewer-selector)
+[![](https://github.com/BIOP/bigdataviewer-selector/actions/workflows/build-main.yml/badge.svg)](https://github.com/BIOP/bigdataviewer-selector/actions/workflows/build-main.yml)
 
 # BigDataViewer Selector Module
 
