@@ -1,23 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>8</source>
-					<target>8</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>30.0.0</version>
+		<version>31.1.0</version>
 		<relativePath />
 	</parent>
 
@@ -113,9 +101,9 @@
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:git://github.com/NicoKiaru/bigdataviewer-selector</connection>
-		<developerConnection>scm:git:git@github.com:NicoKiaru/bigdataviewer-selector</developerConnection>
-		<url>https://github.com/NicoKiaru/bigdataviewer-selector</url>
+		<connection>scm:git:git://github.com/BIOP/bigdataviewer-selector</connection>
+		<developerConnection>scm:git:git@github.com:BIOP/bigdataviewer-selector</developerConnection>
+		<url>https://github.com/BIOP/bigdataviewer-selector</url>
 	  <tag>HEAD</tag>
   </scm>
 	
@@ -135,8 +123,8 @@
 		<package-name>ch.epfl.biop.bdv.select</package-name>
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 		
-		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
+		<bigdataviewer-core.version>10.2.1</bigdataviewer-core.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-29</bigdataviewer-vistools.version>
 		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
 
 	</properties>
