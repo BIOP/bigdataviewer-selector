@@ -113,8 +113,8 @@
 	</issueManagement>
 
 	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.com/NicoKiaru/bigdataviewer-selector</url>
+		<system>GitHub Actions</system>
+		<url>https://github.com/BIOP/bigdataviewer-selector/actions</url>
 	</ciManagement>
 
 	<properties>
