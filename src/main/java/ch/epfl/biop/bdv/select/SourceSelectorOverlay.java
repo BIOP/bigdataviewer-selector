@@ -1,3 +1,4 @@
+
 package ch.epfl.biop.bdv.select;
 
 import bdv.tools.boundingbox.TransformedBox;
@@ -12,10 +13,20 @@ import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.DragBehaviour;
 import org.scijava.ui.behaviour.util.Behaviours;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.geom.GeneralPath;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Works with {@link SourceSelectorBehaviour} Displays box overlays on top of
@@ -25,7 +36,7 @@ import java.util.List;
  * the overlay box are colored. The coloring can be modified with the
  * {@link SourceSelectorOverlay#getStyles()} function and by modify using the
  * values contained in "DEFAULT" and "SELECTED" GUI functioning: The user can
- * draw a rectangle and all sources which interesects this rectangle AT THE
+ * draw a rectangle and all sources which intersects this rectangle AT THE
  * CURRENT PLANE SLICING of Bdv will be involved in the next selection change
  * event. Either the user was holding no extra key: - the involved sources will
  * define the new selection set The user was holding CTRL: - the involved
@@ -57,7 +68,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
 	private List<SourceBoxOverlay> sourcesBoxOverlay = new ArrayList<>();
 
-	Map<String, OverlayStyle> styles = new HashMap<>();
+	final Map<String, OverlayStyle> styles = new HashMap<>();
 
 	final SourceSelectorBehaviour ssb;
 
@@ -196,7 +207,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 	public void updateBoxes() {
 		List<SourceBoxOverlay> newSourcesBoxOverlay = new ArrayList<>();
 
-		for (SourceAndConverter sac : viewer.state().getVisibleSources()) {
+		for (SourceAndConverter<?> sac : viewer.state().getVisibleSources()) {
 			if (sac.getSpimSource().getSource(viewer.state().getCurrentTimepoint(),
 				0) != null)
 			{ // TODO : fix hack to avoid dirty overlay filter
@@ -217,7 +228,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
 		final RenderBoxHelper rbh;
 
-		public SourceBoxOverlay(SourceAndConverter sac) {
+		public SourceBoxOverlay(SourceAndConverter<?> sac) {
 			this.sac = sac;
 			rbh = new RenderBoxHelper();
 		}
@@ -316,18 +327,18 @@ public class SourceSelectorOverlay extends BdvOverlay {
 		SourceSelectorOverlay.OverlayStyle
 	{
 
-		Color backColor = new Color(0x00994499);
+		final Color backColor = new Color(0x00994499);
 
-		Color frontColor = new Color(0x5D46B6);
+		final Color frontColor = new Color(0x5D46B6);
 
-		Color intersectionFillColor = new Color(0x32994499, true);
+		final Color intersectionFillColor = new Color(0x32994499, true);
 
-		Stroke normalStroke = new BasicStroke();
+		final Stroke normalStroke = new BasicStroke();
 
-		Stroke intersectionStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT,
+		final Stroke intersectionStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT,
 			BasicStroke.JOIN_MITER, 1f, new float[] { 10f, 10f }, 0f);
 
-		Color intersectionColor = Color.WHITE.darker();
+		final Color intersectionColor = Color.WHITE.darker();
 
 		public Color getBackColor() {
 			return backColor;
@@ -360,18 +371,18 @@ public class SourceSelectorOverlay extends BdvOverlay {
 		SourceSelectorOverlay.OverlayStyle
 	{
 
-		Color backColor = new Color(0xF7BF18);
+		final Color backColor = new Color(0xF7BF18);
 
-		Color frontColor = new Color(0xC7F718);
+		final Color frontColor = new Color(0xC7F718);
 
-		Color intersectionFillColor = new Color(0x30B66A00, true);
+		final Color intersectionFillColor = new Color(0x30B66A00, true);
 
-		Stroke normalStroke = new BasicStroke();
+		final Stroke normalStroke = new BasicStroke();
 
-		Stroke intersectionStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT,
+		final Stroke intersectionStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT,
 			BasicStroke.JOIN_MITER, 1f, new float[] { 10f, 10f }, 0f);
 
-		Color intersectionColor = Color.WHITE.darker();
+		final Color intersectionColor = Color.WHITE.darker();
 
 		public Color getBackColor() {
 			return backColor;

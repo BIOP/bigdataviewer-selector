@@ -13,6 +13,7 @@ import mpicbg.spim.data.XmlIoSpimData;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
@@ -30,7 +31,8 @@ public class BdvSelectorDemo {
 		BdvHandle bdvh = initAndShowSources();
 		bdvh.getViewerPanel().setNumTimepoints(10);
 
-		// Setup a source selection mode with a trigger input key that toggles it on
+		// Set up a source selection mode with a trigger input key that toggles it
+		// on
 		// and off
 		SourceSelectorBehaviour ssb = new SourceSelectorBehaviour(bdvh, "E");
 
@@ -71,13 +73,14 @@ public class BdvSelectorDemo {
 	static BdvHandle initAndShowSources() throws Exception {
 		// load and convert the famous blobs image
 		ImagePlus imp = IJ.openImage("src/test/resources/blobs.tif");
-		RandomAccessibleInterval blob = ImageJFunctions.wrapReal(imp);
+		RandomAccessibleInterval<UnsignedByteType> blob = ImageJFunctions.wrapReal(
+			imp);
 
 		// load 3d mri image spimdataset
 		SpimData sd = new XmlIoSpimData().load("src/test/resources/mri-stack.xml");
 
 		// Display mri image
-		BdvStackSource bss = BdvFunctions.show(sd).get(0);
+		BdvStackSource<?> bss = BdvFunctions.show(sd).get(0);
 		bss.setDisplayRange(0, 255);
 
 		// Gets reference of BigDataViewer

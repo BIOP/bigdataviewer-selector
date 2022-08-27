@@ -13,8 +13,6 @@ import org.scijava.ui.behaviour.*;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 import org.scijava.ui.behaviour.util.TriggerBehaviourBindings;
-
-
 import javax.swing.InputMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +27,7 @@ import static bdv.viewer.ViewerStateChange.*;
 /**
  * Adds a selection sources mode in a {@link BdvHandle} The selection mode can
  * be toggled programmatically or using a key bindings defined in the
- * constructor of this class It is used in conjuncion with a BdvOverlay layer
+ * constructor of this class It is used in conjunction with a BdvOverlay layer
  * {@link SourceSelectorOverlay} which can be retrieved with
  * {@link SourceSelectorBehaviour#getSourceSelectorOverlay()} The selections can
  * be triggered by GUI actions in the linked {@link SourceSelectorOverlay} or
@@ -56,7 +54,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 
 	final SourceSelectorOverlay selectorOverlay;
 
-	BdvOverlaySource bos;
+	BdvOverlaySource<?> bos;
 
 	final BdvHandle bdvh;
 
@@ -69,9 +67,10 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 	boolean isInstalled; // flag for the toggle action
 
 	// Listeners list
-	List<ToggleListener> toggleListeners = new ArrayList<>();
+	final List<ToggleListener> toggleListeners = new ArrayList<>();
 
-	List<SelectedSourcesListener> selectedSourceListeners = new ArrayList<>();
+	final List<SelectedSourcesListener> selectedSourceListeners =
+		new ArrayList<>();
 
 	protected final Set<SourceAndConverter<?>> selectedSources = ConcurrentHashMap
 		.newKeySet(); // Makes a concurrent set
@@ -293,7 +292,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 	}
 
 	public void selectedSourceAdd(Collection<SourceAndConverter<?>> sources,
-								  String eventSource)
+		String eventSource)
 	{
 		Set<SourceAndConverter<?>> sourcesSet = new HashSet<>(sources);
 		processSelectionModificationEvent(sourcesSet, ADD, eventSource);
@@ -331,7 +330,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 		selectedSourceAdd(sourcesSet, "API");
 	}
 
-	// Handles sources being removed programmatically are becoming invisible ->
+	// Handle sources being removed programmatically are becoming invisible ->
 	// cleans selected sources, if necessary
 	@Override
 	public void viewerStateChanged(ViewerStateChange change) {
