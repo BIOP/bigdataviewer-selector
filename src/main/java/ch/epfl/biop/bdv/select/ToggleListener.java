@@ -1,3 +1,4 @@
+
 package ch.epfl.biop.bdv.select;
 
 /**
@@ -7,13 +8,14 @@ package ch.epfl.biop.bdv.select;
  */
 
 public interface ToggleListener {
-    /**
-     * Triggered when the selection mode is enabled
-     */
-    void isEnabled();
 
-    /**
-     * Triggered when the selection mode is disabled
-     */
-    void isDisabled();
+	/**
+	 * Triggered when the selection mode is enabled
+	 */
+	void isEnabled();
+
+	/**
+	 * Triggered when the selection mode is disabled
+	 */
+	void isDisabled();
 }

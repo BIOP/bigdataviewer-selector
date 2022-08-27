@@ -25,145 +25,166 @@ import java.util.Collection;
 
 public class BdvSelectorDemo {
 
-    static public void main(String... args) throws Exception {
-        // Creates a demo bdv frame with demo images
-        BdvHandle bdvh = initAndShowSources();
-        bdvh.getViewerPanel().setNumTimepoints(10);
+	static public void main(String... args) throws Exception {
+		// Creates a demo bdv frame with demo images
+		BdvHandle bdvh = initAndShowSources();
+		bdvh.getViewerPanel().setNumTimepoints(10);
 
-        // Setup a source selection mode with a trigger input key that toggles it on and off
-        SourceSelectorBehaviour ssb = new SourceSelectorBehaviour(bdvh, "E");
+		// Setup a source selection mode with a trigger input key that toggles it on
+		// and off
+		SourceSelectorBehaviour ssb = new SourceSelectorBehaviour(bdvh, "E");
 
-        // Adds a listener which displays the events - either GUI or programmatically triggered
-        ssb.addSelectedSourcesListener(new SelectedSourcesListener() {
-            @Override
-            public void selectedSourcesUpdated(Collection<SourceAndConverter<?>> selectedSources, String triggerMode) {
-                bdvh.getViewerPanel().showMessage("Trigger : "+triggerMode);
-                bdvh.getViewerPanel().showMessage("Total Selected Sources : "+selectedSources.size());
-            }
+		// Adds a listener which displays the events - either GUI or
+		// programmatically triggered
+		ssb.addSelectedSourcesListener(new SelectedSourcesListener() {
 
-            @Override
-            public void lastSelectionEvent(Collection<SourceAndConverter<?>> lastSelectedSources, String mode, String triggerMode) {
-                bdvh.getViewerPanel().showMessage(mode + " " + lastSelectedSources.size());
-            }
-        });
+			@Override
+			public void selectedSourcesUpdated(
+				Collection<SourceAndConverter<?>> selectedSources, String triggerMode)
+			{
+				bdvh.getViewerPanel().showMessage("Trigger : " + triggerMode);
+				bdvh.getViewerPanel().showMessage("Total Selected Sources : " +
+					selectedSources.size());
+			}
 
-        // Example of simple behaviours that can be added on top of the source selector
-        // Here it adds an editor behaviour which only action is to remove the selected sources from the window
-        // When the delete key is pressed
-        addEditorBehaviours(bdvh, ssb);
+			@Override
+			public void lastSelectionEvent(
+				Collection<SourceAndConverter<?>> lastSelectedSources, String mode,
+				String triggerMode)
+			{
+				bdvh.getViewerPanel().showMessage(mode + " " + lastSelectedSources
+					.size());
+			}
+		});
 
-        // Programmatic API Demo : triggers a list of actions separated in time
-        programmaticAPIDemo(bdvh, ssb);
-    }
+		// Example of simple behaviours that can be added on top of the source
+		// selector
+		// Here it adds an editor behaviour which only action is to remove the
+		// selected sources from the window
+		// When the delete key is pressed
+		addEditorBehaviours(bdvh, ssb);
 
-    static BdvHandle initAndShowSources() throws Exception {
-        // load and convert the famous blobs image
-        ImagePlus imp = IJ.openImage("src/test/resources/blobs.tif");
-        RandomAccessibleInterval blob = ImageJFunctions.wrapReal(imp);
+		// Programmatic API Demo : triggers a list of actions separated in time
+		programmaticAPIDemo(bdvh, ssb);
+	}
 
-        // load 3d mri image spimdataset
-        SpimData sd = new XmlIoSpimData().load("src/test/resources/mri-stack.xml");
+	static BdvHandle initAndShowSources() throws Exception {
+		// load and convert the famous blobs image
+		ImagePlus imp = IJ.openImage("src/test/resources/blobs.tif");
+		RandomAccessibleInterval blob = ImageJFunctions.wrapReal(imp);
 
-        // Display mri image
-        BdvStackSource bss = BdvFunctions.show(sd).get(0);
-        bss.setDisplayRange(0,255);
+		// load 3d mri image spimdataset
+		SpimData sd = new XmlIoSpimData().load("src/test/resources/mri-stack.xml");
 
-        // Gets reference of BigDataViewer
-        BdvHandle bdvh = bss.getBdvHandle();
+		// Display mri image
+		BdvStackSource bss = BdvFunctions.show(sd).get(0);
+		bss.setDisplayRange(0, 255);
 
-        // Defines location of blobs image
-        AffineTransform3D m = new AffineTransform3D();
-        m.rotate(0,Math.PI/4);
-        m.translate(256, 0,0);
+		// Gets reference of BigDataViewer
+		BdvHandle bdvh = bss.getBdvHandle();
 
-        // Display first blobs image
-        BdvFunctions.show(blob, "Blobs Rot X", BdvOptions.options().sourceTransform(m).addTo(bdvh));
+		// Defines location of blobs image
+		AffineTransform3D m = new AffineTransform3D();
+		m.rotate(0, Math.PI / 4);
+		m.translate(256, 0, 0);
 
-        // Defines location of blobs image
-        m.identity();
-        m.rotate(2,Math.PI/4);
-        m.translate(0,256,0);
+		// Display first blobs image
+		BdvFunctions.show(blob, "Blobs Rot X", BdvOptions.options().sourceTransform(
+			m).addTo(bdvh));
 
-        // Display second blobs image
-        BdvFunctions.show(blob, "Blobs Rot Z ", BdvOptions.options().sourceTransform(m).addTo(bdvh));
+		// Defines location of blobs image
+		m.identity();
+		m.rotate(2, Math.PI / 4);
+		m.translate(0, 256, 0);
 
-        // Defines location of blobs image
-        m.identity();
-        m.rotate(2,Math.PI/6);
-        m.rotate(0,Math.PI/720);
-        m.translate(312,256,0);
+		// Display second blobs image
+		BdvFunctions.show(blob, "Blobs Rot Z ", BdvOptions.options()
+			.sourceTransform(m).addTo(bdvh));
 
-        // Display third blobs image
-        BdvFunctions.show(blob, "Blobs Rot Z Y ", BdvOptions.options().sourceTransform(m).addTo(bdvh));
+		// Defines location of blobs image
+		m.identity();
+		m.rotate(2, Math.PI / 6);
+		m.rotate(0, Math.PI / 720);
+		m.translate(312, 256, 0);
 
-        // Sets BigDataViewer view
-        m.identity();
-        m.scale(0.75);
-        m.translate(150,100,0);
+		// Display third blobs image
+		BdvFunctions.show(blob, "Blobs Rot Z Y ", BdvOptions.options()
+			.sourceTransform(m).addTo(bdvh));
 
-        bdvh.getViewerPanel().state().setViewerTransform(m);
-        bdvh.getViewerPanel().requestRepaint();
+		// Sets BigDataViewer view
+		m.identity();
+		m.scale(0.75);
+		m.translate(150, 100, 0);
 
-        return bdvh;
-    }
+		bdvh.getViewerPanel().state().setViewerTransform(m);
+		bdvh.getViewerPanel().requestRepaint();
 
-    static void addEditorBehaviours(BdvHandle bdvh, SourceSelectorBehaviour ssb) {
-        Behaviours editor = new Behaviours(new InputTriggerConfig());
+		return bdvh;
+	}
 
-        ClickBehaviour delete = (x,y) -> bdvh.getViewerPanel().state().removeSources(ssb.getSelectedSources());
+	static void addEditorBehaviours(BdvHandle bdvh, SourceSelectorBehaviour ssb) {
+		Behaviours editor = new Behaviours(new InputTriggerConfig());
 
-        editor.behaviour(delete, "remove-sources-from-bdv", "DELETE");
+		ClickBehaviour delete = (x, y) -> bdvh.getViewerPanel().state()
+			.removeSources(ssb.getSelectedSources());
 
-        // One way to chain the behaviour : install and uninstall on source selector toggling:
-        // The delete key will act only when the source selection mode is on
-        ssb.addToggleListener(new ToggleListener() {
-            @Override
-            public void isEnabled() {
-                bdvh.getViewerPanel().showMessage("Selection Mode Enable");
-                bdvh.getViewerPanel().showMessage(ssb.getSelectedSources().size()+" sources selected");
-                // Enable the editor behaviours when the selector is enabled
-                editor.install(bdvh.getTriggerbindings(), "sources-editor");
-            }
+		editor.behaviour(delete, "remove-sources-from-bdv", "DELETE");
 
-            @Override
-            public void isDisabled() {
-                bdvh.getViewerPanel().showMessage("Selection Mode Disable");
-                // Disable the editor behaviours the selector is disabled
-                bdvh.getTriggerbindings().removeInputTriggerMap("sources-editor");
-                bdvh.getTriggerbindings().removeBehaviourMap("sources-editor");
-            }
-        });
-    }
+		// One way to chain the behaviour : install and uninstall on source selector
+		// toggling:
+		// The delete key will act only when the source selection mode is on
+		ssb.addToggleListener(new ToggleListener() {
 
-    static void programmaticAPIDemo(BdvHandle bdvh, SourceSelectorBehaviour ssb) throws Exception {
-        // Enable source selection mode
-        ssb.enable();
+			@Override
+			public void isEnabled() {
+				bdvh.getViewerPanel().showMessage("Selection Mode Enable");
+				bdvh.getViewerPanel().showMessage(ssb.getSelectedSources().size() +
+					" sources selected");
+				// Enable the editor behaviours when the selector is enabled
+				editor.install(bdvh.getTriggerbindings(), "sources-editor");
+			}
 
-        // Select a source
-        ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources().get(0));
+			@Override
+			public void isDisabled() {
+				bdvh.getViewerPanel().showMessage("Selection Mode Disable");
+				// Disable the editor behaviours the selector is disabled
+				bdvh.getTriggerbindings().removeInputTriggerMap("sources-editor");
+				bdvh.getTriggerbindings().removeBehaviourMap("sources-editor");
+			}
+		});
+	}
 
-        Thread.sleep(1000);
+	static void programmaticAPIDemo(BdvHandle bdvh, SourceSelectorBehaviour ssb)
+		throws Exception
+	{
+		// Enable source selection mode
+		ssb.enable();
 
-        // and another one
-        ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources().get(1));
+		// Select a source
+		ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources().get(0));
 
-        Thread.sleep(1000);
+		Thread.sleep(1000);
 
-        // and another one
-        ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources().get(2));
+		// and another one
+		ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources().get(1));
 
-        Thread.sleep(1000);
+		Thread.sleep(1000);
 
-        // and another one and remove one
-        ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources().get(3));
-        ssb.selectedSourceRemove(bdvh.getViewerPanel().state().getSources().get(0));
+		// and another one
+		ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources().get(2));
 
-        Thread.sleep(1000);
-        // clears all selection
-        ssb.selectedSourcesClear();
+		Thread.sleep(1000);
 
-        Thread.sleep(1000);
-        // select all
-        ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources());
-    }
+		// and another one and remove one
+		ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources().get(3));
+		ssb.selectedSourceRemove(bdvh.getViewerPanel().state().getSources().get(0));
+
+		Thread.sleep(1000);
+		// clears all selection
+		ssb.selectedSourcesClear();
+
+		Thread.sleep(1000);
+		// select all
+		ssb.selectedSourceAdd(bdvh.getViewerPanel().state().getSources());
+	}
 }
