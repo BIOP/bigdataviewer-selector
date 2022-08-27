@@ -1,4 +1,3 @@
-
 package ch.epfl.biop.bdv.select;
 
 import bdv.tools.boundingbox.TransformedBox;

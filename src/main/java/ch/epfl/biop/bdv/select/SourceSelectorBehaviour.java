@@ -14,8 +14,13 @@ import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 import org.scijava.ui.behaviour.util.TriggerBehaviourBindings;
 
-import javax.swing.*;
-import java.util.*;
+
+import javax.swing.InputMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -288,7 +293,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 	}
 
 	public void selectedSourceAdd(Collection<SourceAndConverter<?>> sources,
-		String eventSource)
+								  String eventSource)
 	{
 		Set<SourceAndConverter<?>> sourcesSet = new HashSet<>(sources);
 		processSelectionModificationEvent(sourcesSet, ADD, eventSource);
