@@ -101,7 +101,7 @@
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:git://github.com/BIOP/bigdataviewer-selector</connection>
+		<connection>scm:git:https://github.com/BIOP/bigdataviewer-selector</connection>
 		<developerConnection>scm:git:git@github.com:BIOP/bigdataviewer-selector</developerConnection>
 		<url>https://github.com/BIOP/bigdataviewer-selector</url>
 	  <tag>HEAD</tag>
