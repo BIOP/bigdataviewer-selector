@@ -67,7 +67,7 @@ public class BdvSelectorDemo {
 		addEditorBehaviours(bdvh, ssb);
 
 		// Programmatic API Demo : triggers a list of actions separated in time
-		programmaticAPIDemo(bdvh, ssb);
+		// programmaticAPIDemo(bdvh, ssb);
 	}
 
 	static BdvHandle initAndShowSources() throws Exception {
@@ -91,9 +91,15 @@ public class BdvSelectorDemo {
 		m.rotate(0, Math.PI / 4);
 		m.translate(256, 0, 0);
 
-		// Display first blobs image
+		// Display first blobs image - four times to emulate a multichannel image
 		BdvFunctions.show(blob, "Blobs Rot X", BdvOptions.options().sourceTransform(
 			m).addTo(bdvh));
+		BdvFunctions.show(blob, "Blobs Rot X_2", BdvOptions.options().sourceTransform(
+				m).addTo(bdvh));
+		BdvFunctions.show(blob, "Blobs Rot X_3", BdvOptions.options().sourceTransform(
+				m).addTo(bdvh));
+		BdvFunctions.show(blob, "Blobs Rot X_4", BdvOptions.options().sourceTransform(
+				m).addTo(bdvh));
 
 		// Defines location of blobs image
 		m.identity();

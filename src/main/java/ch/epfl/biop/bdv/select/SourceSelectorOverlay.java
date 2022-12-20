@@ -19,7 +19,9 @@ import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,6 +73,16 @@ public class SourceSelectorOverlay extends BdvOverlay {
 	final Map<String, OverlayStyle> styles = new HashMap<>();
 
 	final SourceSelectorBehaviour ssb;
+
+	boolean displaySourcesNames = true;
+
+	public void showSourcesNames() {
+		displaySourcesNames = true;
+	}
+
+	public void hideSourcesNames() {
+		displaySourcesNames = false;
+	}
 
 	public SourceSelectorOverlay(ViewerPanel viewer,
 		SourceSelectorBehaviour ssb)
@@ -186,8 +198,11 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
 	@Override
 	public synchronized void draw(Graphics2D g) {
+
+		Map<Integer,Set<Integer>> occupied = new HashMap<>();
+
 		for (SourceBoxOverlay source : sourcesBoxOverlay) {
-			source.drawBoxOverlay(g);
+			source.drawBoxOverlay(g, displaySourcesNames, occupied);
 		}
 
 		if (isCurrentlySelecting) {
@@ -233,7 +248,28 @@ public class SourceSelectorOverlay extends BdvOverlay {
 			rbh = new RenderBoxHelper();
 		}
 
-		public void drawBoxOverlay(Graphics2D graphics) {
+		private Map<Integer,Set<Integer>> displayAt(Graphics2D graphics, double xp, double yp, String name, Map<Integer,Set<Integer>> occupied) {
+			double binSizeX = 100;
+			double binSizeY = 20;
+			int binX = (int) (xp/binSizeX);
+			int binY = (int) (yp/binSizeY);
+			int shiftX = 0;
+			int shiftY = 0;
+			if (!occupied.containsKey(binX)) {
+				occupied.put(binX, new HashSet<>());
+			}
+			Set<Integer> occupiedY = occupied.get(binX);
+
+			while (occupiedY.contains(binY)) {
+				binY++;
+				shiftY += binSizeY;
+			}
+			occupiedY.add(binY);
+			graphics.drawString(sac.getSpimSource().getName(),(int) (xp+shiftX),(int) (yp+shiftY));
+			return occupied;
+		}
+
+		private	Map<Integer,Set<Integer>> drawBoxOverlay(Graphics2D graphics, boolean displaySourcesNames, Map<Integer,Set<Integer>> occupied) {
 			OverlayStyle os;
 
 			if (ssb.selectedSources.contains(sac)) {
@@ -261,7 +297,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 				rbh.setScale(1);
 
 				rbh.renderBox(interval, transform, front, back, intersection);
-
+				Rectangle screen = new Rectangle(0,0,canvasWidth, canvasHeight);
 				Rectangle rectBounds = intersection.getBounds();
 				if ((rectBounds.x + rectBounds.width > 0) &&
 					(rectBounds.x < canvasWidth))
@@ -278,9 +314,20 @@ public class SourceSelectorOverlay extends BdvOverlay {
 						graphics.setPaint(os.getIntersectionColor());
 						graphics.setStroke(os.getIntersectionStroke());
 						graphics.draw(intersection);
+
+						if (displaySourcesNames) {
+							Area a = new Area(intersection);
+							a.intersect(new Area(screen));
+							double cx = a.getBounds2D().getCenterX();
+							double cy = a.getBounds2D().getCenterY();
+							//graphics.drawString(sac.getSpimSource().getName(),(int) cx,(int)cy);
+							occupied = displayAt(graphics, cx, cy, sac.getSpimSource().getName(), occupied);
+						}
 					}
 				}
 			}
+
+			return occupied;
 
 		}
 
@@ -301,6 +348,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 			sac.getSpimSource().getSourceTransform(viewer.state()
 				.getCurrentTimepoint(), 0, transform);
 		}
+
 	}
 
 	/**
