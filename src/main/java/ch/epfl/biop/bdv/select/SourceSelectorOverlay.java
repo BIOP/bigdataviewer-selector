@@ -321,6 +321,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 							double cx = a.getBounds2D().getCenterX();
 							double cy = a.getBounds2D().getCenterY();
 							//graphics.drawString(sac.getSpimSource().getName(),(int) cx,(int)cy);
+							graphics.setColor(os.getFrontColor());
 							occupied = displayAt(graphics, cx, cy, sac.getSpimSource().getName(), occupied);
 						}
 					}

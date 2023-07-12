@@ -4,6 +4,7 @@ import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
 import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.bdv.select.SelectedSourcesListener;
+import ch.epfl.biop.bdv.select.SourceNameOverlay;
 import ch.epfl.biop.bdv.select.SourceSelectorBehaviour;
 import ch.epfl.biop.bdv.select.ToggleListener;
 import ij.IJ;
@@ -68,6 +69,8 @@ public class BdvSelectorDemo {
 
 		// Programmatic API Demo : triggers a list of actions separated in time
 		// programmaticAPIDemo(bdvh, ssb);
+
+		BdvFunctions.showOverlay(new SourceNameOverlay(bdvh.getViewerPanel()), "Sources name", BdvOptions.options().addTo(bdvh));
 	}
 
 	static BdvHandle initAndShowSources() throws Exception {
