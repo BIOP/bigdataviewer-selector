@@ -19,7 +19,6 @@ import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
@@ -68,6 +67,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
 	private int canvasHeight;
 
+	private final Object lockSourceBoxOverlay = new Object();
 	private List<SourceBoxOverlay> sourcesBoxOverlay = new ArrayList<>();
 
 	final Map<String, OverlayStyle> styles = new HashMap<>();
@@ -231,7 +231,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 			}
 		}
 
-		synchronized (sourcesBoxOverlay) {
+		synchronized (lockSourceBoxOverlay) {
 			sourcesBoxOverlay = newSourcesBoxOverlay;
 		}
 

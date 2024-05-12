@@ -6,7 +6,10 @@ import bdv.util.BdvHandle;
 import bdv.util.BdvOptions;
 import bdv.util.BdvOverlaySource;
 import bdv.viewer.SourceAndConverter;
+import bdv.viewer.SourceGroup;
+import bdv.viewer.SynchronizedViewerState;
 import bdv.viewer.ViewerPanel;
+import bdv.viewer.ViewerState;
 import bdv.viewer.ViewerStateChange;
 import bdv.viewer.ViewerStateChangeListener;
 import org.scijava.ui.behaviour.*;
@@ -189,11 +192,17 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 	 */
 	synchronized void uninstall() {
 		isInstalled = false;
-		int nTimePoints = bdvh.getViewerPanel().state().getNumTimepoints();
-		int currentTimePoint = bdvh.getViewerPanel().state().getCurrentTimepoint();
+		// Removing the bos removes a lot of things from bdv - this needs to be manually restored (groups and timepoints)
+		SynchronizedViewerState state = bdvh.getViewerPanel().state();
+		ViewerState snap = state.snapshot();
 		bos.removeFromBdv();
-		bdvh.getViewerPanel().state().setNumTimepoints(nTimePoints);
-		bdvh.getViewerPanel().state().setCurrentTimepoint(currentTimePoint);
+		state.setNumTimepoints(snap.getNumTimepoints());
+		state.setCurrentTimepoint(snap.getCurrentTimepoint());
+		state.setCurrentGroup(snap.getCurrentGroup());
+		for (SourceGroup group: state.getGroups()) {
+			state.addSourcesToGroup(snap.getSourcesInGroup(group), group);
+			state.setGroupActive(group, snap.isGroupActive(group));
+		}
 		triggerbindings.removeBehaviourMap(SOURCES_SELECTOR_MAP);
 		triggerbindings.removeInputTriggerMap(SOURCES_SELECTOR_MAP);
 		bdvh.getKeybindings().removeInputMap("blocking-source-selector");
