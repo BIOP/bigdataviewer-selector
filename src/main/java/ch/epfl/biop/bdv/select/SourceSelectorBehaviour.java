@@ -198,11 +198,11 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 		bos.removeFromBdv();
 		state.setNumTimepoints(snap.getNumTimepoints());
 		state.setCurrentTimepoint(snap.getCurrentTimepoint());
-		state.setCurrentGroup(snap.getCurrentGroup());
 		for (SourceGroup group: state.getGroups()) {
 			state.addSourcesToGroup(snap.getSourcesInGroup(group), group);
 			state.setGroupActive(group, snap.isGroupActive(group));
 		}
+		state.setCurrentGroup(snap.getCurrentGroup());
 		triggerbindings.removeBehaviourMap(SOURCES_SELECTOR_MAP);
 		triggerbindings.removeInputTriggerMap(SOURCES_SELECTOR_MAP);
 		bdvh.getKeybindings().removeInputMap("blocking-source-selector");
