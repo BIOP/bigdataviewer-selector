@@ -17,8 +17,10 @@ import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 import org.scijava.ui.behaviour.util.TriggerBehaviourBindings;
 import javax.swing.InputMap;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -160,6 +162,8 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 		triggerbindings.removeBehaviourMap(SOURCES_SELECTOR_TOGGLE_MAP);
 	}
 
+	Set<SourceGroup> sourceGroups = new HashSet<>();
+
 	/**
 	 * Private : call enable instead
 	 */
@@ -174,11 +178,30 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 		int currentTimePoint = bdvh.getViewerPanel().state().getCurrentTimepoint();
 		bos = BdvFunctions.showOverlay(selectorOverlay, "Selector_Overlay",
 			BdvOptions.options().addTo(bdvh));
+
+		// Add it to all the groups... otherwise the overlay does not show when you're in group mode
+		bdvh.getViewerPanel().state().getGroups().forEach(
+				group -> {
+						bdvh.getViewerPanel().state().addSourcesToGroup(Collections.singleton(getSourceAndConverterFrom(bos)), group);
+						sourceGroups.add(group); // To remind us to remove the overlay when it's uninstalled
+				}
+		);
+
 		bdvh.getViewerPanel().state().setNumTimepoints(nTimePoints);
 		bdvh.getViewerPanel().state().setCurrentTimepoint(currentTimePoint);
 		bdvh.getKeybindings().addInputMap("blocking-source-selector",
 			new InputMap(), "bdv", "navigation");
 		toggleListeners.forEach(ToggleListener::isEnabled);
+	}
+
+	static SourceAndConverter<Void> getSourceAndConverterFrom(BdvOverlaySource<?> overlay) {
+		try {
+			Field sourceField = BdvOverlaySource.class.getDeclaredField("source");
+			sourceField.setAccessible(true);
+			return (SourceAndConverter<Void>) sourceField.get(overlay);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public void addBehaviour(Behaviour behaviour, String behaviourName,
@@ -193,6 +216,12 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 	synchronized void uninstall() {
 		isInstalled = false;
 		// Removing the bos removes a lot of things from bdv - this needs to be manually restored (groups and timepoints)
+		// Remove the overlay from all groups
+		sourceGroups.forEach(
+				group -> bdvh.getViewerPanel().state().removeSourceFromGroup(getSourceAndConverterFrom(bos), group)
+		);
+		sourceGroups.clear();
+
 		SynchronizedViewerState state = bdvh.getViewerPanel().state();
 		ViewerState snap = state.snapshot();
 		bos.removeFromBdv();
