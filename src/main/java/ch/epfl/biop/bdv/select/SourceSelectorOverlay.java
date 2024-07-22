@@ -262,7 +262,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
 			while (occupiedY.contains(binY)) {
 				binY++;
-				shiftY += binSizeY;
+				shiftY += (int) binSizeY;
 			}
 			occupiedY.add(binY);
 			graphics.drawString(sac.getSpimSource().getName(),(int) (xp+shiftX),(int) (yp+shiftY));

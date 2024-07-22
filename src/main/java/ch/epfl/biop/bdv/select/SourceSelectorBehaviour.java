@@ -162,7 +162,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 		triggerbindings.removeBehaviourMap(SOURCES_SELECTOR_TOGGLE_MAP);
 	}
 
-	Set<SourceGroup> sourceGroups = new HashSet<>();
+	final Set<SourceGroup> sourceGroups = new HashSet<>();
 
 	/**
 	 * Private : call enable instead
@@ -304,7 +304,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 					break;
 			}
 
-			if (currentSources.size() != 0) {
+			if (!currentSources.isEmpty()) {
 				selectedSourceListeners.forEach(listener -> {
 					listener.selectedSourcesUpdated(getSelectedSources(), eventSource);
 					listener.lastSelectionEvent(removeOverlaySources(currentSources),
@@ -312,7 +312,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 				});
 			}
 
-			if ((currentSources.size() == 0) && (initialSize != 0) && (mode.equals(
+			if ((currentSources.isEmpty()) && (initialSize != 0) && (mode.equals(
 				SET)))
 			{
 				selectedSourceListeners.forEach(listener -> {
@@ -380,7 +380,7 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 			Set<SourceAndConverter<?>> leftOvers = new HashSet<>(selectedSources);
 			leftOvers.removeAll(viewer.state().getVisibleSources());
 			// selectedSources.removeAll(leftOvers);
-			if (leftOvers.size() > 0) {
+			if (!leftOvers.isEmpty()) {
 				processSelectionModificationEvent(leftOvers, REMOVE, change.toString());
 			}
 		}

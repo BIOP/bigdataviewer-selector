@@ -9,16 +9,11 @@ import bdv.viewer.ViewerPanel;
 import net.imglib2.FinalRealInterval;
 import net.imglib2.RealInterval;
 import net.imglib2.realtransform.AffineTransform3D;
-import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.ui.behaviour.DragBehaviour;
-import org.scijava.ui.behaviour.util.Behaviours;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
@@ -108,7 +103,7 @@ public class SourceNameOverlay extends BdvOverlay {
 
 		while (occupiedY.contains(binY)) {
 			binY++;
-			shiftY += binSizeY;
+			shiftY += (int) binSizeY;
 		}
 		occupiedY.add(binY);
 		graphics.drawString(sac.getSpimSource().getName(),(int) (xp+shiftX),(int) (yp+shiftY));
