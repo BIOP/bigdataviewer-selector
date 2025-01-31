@@ -1,6 +1,8 @@
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandle;
 import bdv.util.BdvOptions;
+import bdv.util.BdvOverlay;
+import bdv.util.BdvOverlaySource;
 import bdv.util.BdvStackSource;
 import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.bdv.select.SelectedSourcesListener;
@@ -26,7 +28,7 @@ import java.util.Collection;
  */
 
 public class BdvSelectorDemo {
-
+	//TODO CHECK WHETHER THE NUMBER OF TIMEPOINTS ARE KEPT
 	static public void main(String... args) throws Exception {
 		// Creates a demo bdv frame with demo images
 		BdvHandle bdvh = initAndShowSources();
@@ -69,8 +71,37 @@ public class BdvSelectorDemo {
 
 		// Programmatic API Demo : triggers a list of actions separated in time
 		// programmaticAPIDemo(bdvh, ssb);
+		// NOTE:
+		showOverlay(bdvh, new SourceNameOverlay(bdvh.getViewerPanel()), "Sources Name");
+	}
 
-		BdvFunctions.showOverlay(new SourceNameOverlay(bdvh.getViewerPanel()), "Sources name", BdvOptions.options().addTo(bdvh));
+	/**
+	 * Helper function that maintains the number of timepoints of a bdv,
+	 * see
+	 * @param bdvh
+	 * @param overlay
+	 * @param name
+	 * @return
+	 * @param <T>
+	 */
+	public static <T extends BdvOverlay> BdvOverlaySource<T> showOverlay(BdvHandle bdvh, T overlay, String name) {
+		// Store
+		int nTimepoints = bdvh.getViewerPanel().state().getNumTimepoints();
+		int currentTimePoint = bdvh.getViewerPanel().state().getCurrentTimepoint();
+		BdvOverlaySource<T> bos = BdvFunctions.showOverlay(overlay, name, BdvOptions.options().addTo(bdvh));
+		bdvh.getViewerPanel().state().setNumTimepoints(nTimepoints);
+		bdvh.getViewerPanel().state().setCurrentTimepoint(currentTimePoint);
+		return bos;
+	}
+
+	public static void removeOverlay(BdvOverlaySource<?> overlay) {
+		// Store
+		BdvHandle bdvh = overlay.getBdvHandle();
+		int nTimepoints = bdvh.getViewerPanel().state().getNumTimepoints();
+		int currentTimePoint = bdvh.getViewerPanel().state().getCurrentTimepoint();
+		overlay.removeFromBdv();
+		bdvh.getViewerPanel().state().setNumTimepoints(nTimepoints);
+		bdvh.getViewerPanel().state().setCurrentTimepoint(currentTimePoint);
 	}
 
 	static BdvHandle initAndShowSources() throws Exception {

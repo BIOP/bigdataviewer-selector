@@ -40,9 +40,6 @@ public class SourceNameOverlay extends BdvOverlay {
 
 	final Map<String, OverlayStyle> styles = new HashMap<>();
 
-	boolean displaySourcesNames = true;
-
-
 	public SourceNameOverlay(ViewerPanel viewer)
 	{
 		this.viewer = viewer;
@@ -76,8 +73,7 @@ public class SourceNameOverlay extends BdvOverlay {
 
 		for (SourceAndConverter<?> sac : viewer.state().getVisibleSources()) {
 			if (sac.getSpimSource().getSource(viewer.state().getCurrentTimepoint(),
-				0) != null)
-			{ // TODO : fix hack to avoid dirty overlay filter
+				0) != null) { // TODO : that's a hack to prevent issues with overlay sources
 				newSourcesBoxOverlay.add(new SourceNameOverlay.SourceBoxOverlay(
 					sac));
 			}
