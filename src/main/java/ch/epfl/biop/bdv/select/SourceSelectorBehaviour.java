@@ -31,10 +31,8 @@ import bdv.util.BdvHandle;
 import bdv.util.BdvOptions;
 import bdv.util.BdvOverlaySource;
 import bdv.viewer.SourceAndConverter;
-import bdv.viewer.SourceGroup;
 import bdv.viewer.SynchronizedViewerState;
 import bdv.viewer.ViewerPanel;
-import bdv.viewer.ViewerState;
 import bdv.viewer.ViewerStateChange;
 import bdv.viewer.ViewerStateChangeListener;
 import org.scijava.ui.behaviour.*;
@@ -195,8 +193,6 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 		viewer.state().changeListeners().remove(this);
 	}
 
-	final Set<SourceGroup> sourceGroups = new HashSet<>();
-
 	/**
 	 * Private : call enable instead
 	 */
@@ -213,12 +209,10 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 			BdvOptions.options().addTo(bdvh));
 
 		// Add it to all the groups... otherwise the overlay does not show when you're in group mode
-		bdvh.getViewerPanel().state().getGroups().forEach(
-				group -> {
-						bdvh.getViewerPanel().state().addSourcesToGroup(Collections.singleton(getSourceAndConverterFrom(bos)), group);
-						sourceGroups.add(group); // To remind us to remove the overlay when it's uninstalled
-				}
-		);
+		SourceAndConverter<Void> overlaySource = getSourceAndConverterFrom(bos);
+		bdvh.getViewerPanel().state().getGroups().forEach(group -> bdvh
+			.getViewerPanel().state().addSourcesToGroup(Collections.singleton(
+				overlaySource), group));
 
 		bdvh.getViewerPanel().state().setNumTimepoints(nTimePoints);
 		bdvh.getViewerPanel().state().setCurrentTimepoint(currentTimePoint);
@@ -248,23 +242,18 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 	 */
 	synchronized void uninstall() {
 		isInstalled = false;
-		// Removing the bos removes a lot of things from bdv - this needs to be manually restored (groups and timepoints)
-		// Remove the overlay from all groups
-		sourceGroups.forEach(
-				group -> bdvh.getViewerPanel().state().removeSourceFromGroup(getSourceAndConverterFrom(bos), group)
-		);
-		sourceGroups.clear();
-
+		// Removing the overlay source resets the number of timepoints, because
+		// vistools recomputes it over its own BdvSources and ignores the core
+		// SourceAndConverters (see bigdataviewer-playground#272). Save and restore
+		// the timepoints manually around the removal. Source group membership is
+		// no longer corrupted since bigdataviewer-core#177 was fixed, so the
+		// overlay is simply removed from all groups by removeFromBdv().
 		SynchronizedViewerState state = bdvh.getViewerPanel().state();
-		ViewerState snap = state.snapshot();
+		int nTimePoints = state.getNumTimepoints();
+		int currentTimePoint = state.getCurrentTimepoint();
 		bos.removeFromBdv();
-		state.setNumTimepoints(snap.getNumTimepoints());
-		state.setCurrentTimepoint(snap.getCurrentTimepoint());
-		for (SourceGroup group: state.getGroups()) {
-			state.addSourcesToGroup(snap.getSourcesInGroup(group), group);
-			state.setGroupActive(group, snap.isGroupActive(group));
-		}
-		state.setCurrentGroup(snap.getCurrentGroup());
+		state.setNumTimepoints(nTimePoints);
+		state.setCurrentTimepoint(currentTimePoint);
 		triggerbindings.removeBehaviourMap(SOURCES_SELECTOR_MAP);
 		triggerbindings.removeInputTriggerMap(SOURCES_SELECTOR_MAP);
 		bdvh.getKeybindings().removeInputMap("blocking-source-selector");
