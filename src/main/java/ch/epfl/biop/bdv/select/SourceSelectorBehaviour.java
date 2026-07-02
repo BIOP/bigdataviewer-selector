@@ -41,6 +41,8 @@ import org.scijava.ui.behaviour.*;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 import org.scijava.ui.behaviour.util.TriggerBehaviourBindings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.swing.InputMap;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -73,6 +75,9 @@ import static bdv.viewer.ViewerStateChange.*;
  */
 
 public class SourceSelectorBehaviour implements ViewerStateChangeListener {
+
+	protected static final Logger logger = LoggerFactory.getLogger(
+		SourceSelectorBehaviour.class);
 
 	final public static String SOURCES_SELECTOR_MAP = "sources-selector";
 	final public static String SOURCES_SELECTOR_TOGGLE_MAP =
@@ -185,6 +190,9 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 		disable();
 		triggerbindings.removeInputTriggerMap(SOURCES_SELECTOR_TOGGLE_MAP);
 		triggerbindings.removeBehaviourMap(SOURCES_SELECTOR_TOGGLE_MAP);
+		// Unregister from the viewer state, otherwise this instance keeps
+		// receiving events and cannot be garbage collected (see constructor)
+		viewer.state().changeListeners().remove(this);
 	}
 
 	final Set<SourceGroup> sourceGroups = new HashSet<>();
@@ -302,8 +310,8 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 					if (currentSources.stream().anyMatch(sac -> !viewer.state()
 						.isSourceVisible(sac)))
 					{
-						System.err.println(
-							"Error : attempt to select a source which is not visible - selection ignored");
+						logger.error(
+							"Attempt to select a source which is not visible - selection ignored");
 						return;
 					}
 					selectedSources.clear();
@@ -314,8 +322,8 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 					if (currentSources.stream().anyMatch(sac -> !viewer.state()
 						.isSourceVisible(sac)))
 					{
-						System.err.println(
-							"Error : attempt to select a source which is not visible - selection ignored");
+						logger.error(
+							"Attempt to select a source which is not visible - selection ignored");
 						return;
 					}
 					selectedSources.addAll(removeOverlaySources(currentSources));
@@ -324,16 +332,17 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 					selectedSources.removeAll(currentSources);
 					break;
 				default:
-					System.err.println("Unhandled " + mode +
-						" selected source modification event");
+					logger.error("Unhandled {} selected source modification event",
+						mode);
 					break;
 			}
 
 			if (!currentSources.isEmpty()) {
+				Set<SourceAndConverter<?>> lastSelected = removeOverlaySources(
+					currentSources);
 				selectedSourceListeners.forEach(listener -> {
 					listener.selectedSourcesUpdated(getSelectedSources(), eventSource);
-					listener.lastSelectionEvent(removeOverlaySources(currentSources),
-						mode, eventSource);
+					listener.lastSelectionEvent(lastSelected, mode, eventSource);
 				});
 			}
 

@@ -93,7 +93,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 	private int canvasHeight;
 
 	private final Object lockSourceBoxOverlay = new Object();
-	private List<SourceBoxOverlay> sourcesBoxOverlay = new ArrayList<>();
+	private volatile List<SourceBoxOverlay> sourcesBoxOverlay = new ArrayList<>();
 
 	final Map<String, OverlayStyle> styles = new HashMap<>();
 

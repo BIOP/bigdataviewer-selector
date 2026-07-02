@@ -61,7 +61,8 @@ public class SourceNameOverlay extends BdvOverlay {
 	private int canvasWidth;
 	private int canvasHeight;
 
-	private List<SourceBoxOverlay> sourcesBoxOverlay = new ArrayList<>();
+	private final Object lockSourceBoxOverlay = new Object();
+	private volatile List<SourceBoxOverlay> sourcesBoxOverlay = new ArrayList<>();
 
 	final Map<String, OverlayStyle> styles = new HashMap<>();
 
@@ -104,7 +105,7 @@ public class SourceNameOverlay extends BdvOverlay {
 			}
 		}
 
-		synchronized (sourcesBoxOverlay) {
+		synchronized (lockSourceBoxOverlay) {
 			sourcesBoxOverlay = newSourcesBoxOverlay;
 		}
 
