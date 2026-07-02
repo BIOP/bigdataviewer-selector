@@ -120,6 +120,7 @@
 	<properties>
 		<license.licenseName>mit</license.licenseName>
 		<license.copyrightOwners>BIOP (BioImaging &amp; Optics Platform), EPFL</license.copyrightOwners>
+		<license.excludes>**/resources/**</license.excludes>
 		<package-name>ch.epfl.biop.bdv.select</package-name>
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 	</properties>
