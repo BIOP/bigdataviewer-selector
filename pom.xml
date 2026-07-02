@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>40.0.0</version>
+		<version>45.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -23,7 +23,7 @@
 	</organization>
 	<licenses>
 		<license>
-			<name>Simplified BSD License</name>
+			<name>MIT License</name>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
@@ -118,8 +118,8 @@
 	</ciManagement>
 
 	<properties>
-		<license.licenseName>N/A</license.licenseName>
-		<license.copyrightOwners>N/A</license.copyrightOwners>
+		<license.licenseName>mit</license.licenseName>
+		<license.copyrightOwners>BIOP (BioImaging &amp; Optics Platform), EPFL</license.copyrightOwners>
 		<package-name>ch.epfl.biop.bdv.select</package-name>
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 	</properties>
@@ -136,11 +136,6 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>ui-behaviour</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>bigdataviewer-vistools</artifactId>
 		</dependency>
 
 		<dependency>
