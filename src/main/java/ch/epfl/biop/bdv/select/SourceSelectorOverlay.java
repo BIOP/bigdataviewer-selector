@@ -121,14 +121,19 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
 	protected void addSelectionBehaviours(Behaviours behaviours) {
 		behaviours.behaviour(new RectangleSelectSourcesBehaviour(
-			SourceSelectorBehaviour.SET), "select-set-sources", "button1");
+			SourceSelectorBehaviour.SET), SourceSelectorBehaviour.SELECT_SET_SOURCES,
+			SourceSelectorBehaviour.SELECT_SET_SOURCES_KEYS);
 		behaviours.behaviour(new RectangleSelectSourcesBehaviour(
-			SourceSelectorBehaviour.ADD), "select-add-sources", "shift button1");
+			SourceSelectorBehaviour.ADD), SourceSelectorBehaviour.SELECT_ADD_SOURCES,
+			SourceSelectorBehaviour.SELECT_ADD_SOURCES_KEYS);
 		behaviours.behaviour(new RectangleSelectSourcesBehaviour(
-			SourceSelectorBehaviour.REMOVE), "select-remove-sources", "ctrl button1");
-		// Ctrl + A : select all sources
+			SourceSelectorBehaviour.REMOVE),
+			SourceSelectorBehaviour.SELECT_REMOVE_SOURCES,
+			SourceSelectorBehaviour.SELECT_REMOVE_SOURCES_KEYS);
 		behaviours.behaviour((ClickBehaviour) (x, y) -> ssb.selectedSourceAdd(viewer
-			.state().getVisibleSources()), "select-all-visible-sources", "ctrl A");
+			.state().getVisibleSources()),
+			SourceSelectorBehaviour.SELECT_ALL_VISIBLE_SOURCES,
+			SourceSelectorBehaviour.SELECT_ALL_VISIBLE_SOURCES_KEYS);
 	}
 
 	public Map<String, OverlayStyle> getStyles() {

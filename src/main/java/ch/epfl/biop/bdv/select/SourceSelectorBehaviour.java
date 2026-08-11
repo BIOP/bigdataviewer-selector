@@ -26,6 +26,8 @@
 
 package ch.epfl.biop.bdv.select;
 
+import bdv.KeyConfigContexts;
+import bdv.KeyConfigScopes;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandle;
 import bdv.util.BdvOptions;
@@ -35,8 +37,11 @@ import bdv.viewer.SynchronizedViewerState;
 import bdv.viewer.ViewerPanel;
 import bdv.viewer.ViewerStateChange;
 import bdv.viewer.ViewerStateChangeListener;
+import org.scijava.plugin.Plugin;
 import org.scijava.ui.behaviour.*;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
+import org.scijava.ui.behaviour.io.gui.CommandDescriptionProvider;
+import org.scijava.ui.behaviour.io.gui.CommandDescriptions;
 import org.scijava.ui.behaviour.util.Behaviours;
 import org.scijava.ui.behaviour.util.TriggerBehaviourBindings;
 import org.slf4j.Logger;
@@ -85,6 +90,27 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 	final public static String ADD = "ADD";
 	final public static String REMOVE = "REMOVE";
 
+	// Command names and their default triggers. The names are the keys used in
+	// the {@link InputTriggerConfig}, i.e. what a user edits in the BDV
+	// preferences dialog (Keymap page) or in a keymap YAML file. The default
+	// triggers are only used when the config has no entry for the command.
+	final public static String SELECT_SET_SOURCES = "select-set-sources";
+	final public static String SELECT_ADD_SOURCES = "select-add-sources";
+	final public static String SELECT_REMOVE_SOURCES = "select-remove-sources";
+	final public static String SELECT_ALL_VISIBLE_SOURCES =
+		"select-all-visible-sources";
+
+	final public static String[] SOURCES_SELECTOR_TOGGLE_KEYS = new String[] {
+		"E" };
+	final public static String[] SELECT_SET_SOURCES_KEYS = new String[] {
+		"button1" };
+	final public static String[] SELECT_ADD_SOURCES_KEYS = new String[] {
+		"shift button1" };
+	final public static String[] SELECT_REMOVE_SOURCES_KEYS = new String[] {
+		"ctrl button1" };
+	final public static String[] SELECT_ALL_VISIBLE_SOURCES_KEYS = new String[] {
+		"ctrl A" };
+
 	final SourceSelectorOverlay selectorOverlay;
 
 	BdvOverlaySource<?> bos;
@@ -96,6 +122,8 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 	final ViewerPanel viewer;
 
 	final Behaviours behaviours;
+
+	final Behaviours behavioursToggle;
 
 	boolean isInstalled; // flag for the toggle action
 
@@ -109,13 +137,37 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 		.newKeySet(); // Makes a concurrent set
 
 	/**
-	 * Construct a SourceSelectorBehaviour
-	 * 
+	 * Construct a SourceSelectorBehaviour with its default, non configurable
+	 * triggers.
+	 *
 	 * @param bdvh BdvHandle associated to this behaviour
 	 * @param triggerToggleSelector Trigger Input Toggle which will activate /
 	 *          deactivate this mode
 	 */
 	public SourceSelectorBehaviour(BdvHandle bdvh, String triggerToggleSelector) {
+		this(bdvh, new InputTriggerConfig(), triggerToggleSelector);
+	}
+
+	/**
+	 * Construct a SourceSelectorBehaviour whose triggers can be overridden by the
+	 * user.
+	 * <p>
+	 * Triggers found in {@code config} for the {@code bdv} context take
+	 * precedence over the defaults hardcoded here and over
+	 * {@code triggerToggleSelector}. Pass the {@link InputTriggerConfig} of the
+	 * BDV window's {@link bdv.ui.keymap.Keymap} to make the selection bindings
+	 * editable in the BDV preferences dialog, and call
+	 * {@link #updateKeyConfig(InputTriggerConfig)} whenever that keymap changes.
+	 *
+	 * @param bdvh BdvHandle associated to this behaviour
+	 * @param config key config which can override the default triggers
+	 * @param triggerToggleSelector default trigger which will activate /
+	 *          deactivate this mode, used if {@code config} does not define
+	 *          {@link #SOURCES_SELECTOR_TOGGLE_MAP}
+	 */
+	public SourceSelectorBehaviour(BdvHandle bdvh, InputTriggerConfig config,
+		String triggerToggleSelector)
+	{
 		this.bdvh = bdvh;
 		this.triggerbindings = bdvh.getTriggerbindings();
 		this.viewer = bdvh.getViewerPanel();
@@ -131,15 +183,29 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 			}
 		};
 
-		Behaviours behavioursToggle = new Behaviours(new InputTriggerConfig(),
-			"bdv");
+		behavioursToggle = new Behaviours(config,
+			KeyConfigContexts.BIGDATAVIEWER);
 		behavioursToggle.behaviour(toggleSelector, SOURCES_SELECTOR_TOGGLE_MAP,
 			triggerToggleSelector);
 		behavioursToggle.install(bdvh.getTriggerbindings(),
-			"source-selector-toggle");
-		behaviours = new Behaviours(new InputTriggerConfig(), "bdv");
+			SOURCES_SELECTOR_TOGGLE_MAP);
+		behaviours = new Behaviours(config, KeyConfigContexts.BIGDATAVIEWER);
 
 		viewer.state().changeListeners().add(this);
+	}
+
+	/**
+	 * Re-reads all triggers of this selector from {@code config}. Call this when
+	 * the user has edited the keymap, typically from a
+	 * {@link bdv.ui.keymap.Keymap.UpdateListener}. The bindings are updated in
+	 * place, so this works whether the selection mode is currently enabled or
+	 * not.
+	 *
+	 * @param config the new key config
+	 */
+	public void updateKeyConfig(InputTriggerConfig config) {
+		behavioursToggle.updateKeyConfig(config);
+		behaviours.updateKeyConfig(config);
 	}
 
 	/**
@@ -450,6 +516,35 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 		SelectedSourcesListener selectedSourcesListener)
 	{
 		selectedSourceListeners.remove(selectedSourcesListener);
+	}
+
+	/**
+	 * Makes the selector commands discoverable by the keymap editor of the BDV
+	 * preferences dialog, so that they can be listed and re-bound next to the
+	 * commands of BDV itself.
+	 */
+	@Plugin(type = CommandDescriptionProvider.class)
+	public static class Descriptions extends CommandDescriptionProvider {
+
+		public Descriptions() {
+			super(KeyConfigScopes.BIGDATAVIEWER, KeyConfigContexts.BIGDATAVIEWER);
+		}
+
+		@Override
+		public void getCommandDescriptions(final CommandDescriptions descriptions) {
+			descriptions.add(SOURCES_SELECTOR_TOGGLE_MAP,
+				SOURCES_SELECTOR_TOGGLE_KEYS,
+				"Toggle between the source selection (editor) mode and the navigation mode.");
+			descriptions.add(SELECT_SET_SOURCES, SELECT_SET_SOURCES_KEYS,
+				"Select the sources within the dragged rectangle, discarding the previous selection.");
+			descriptions.add(SELECT_ADD_SOURCES, SELECT_ADD_SOURCES_KEYS,
+				"Add the sources within the dragged rectangle to the current selection.");
+			descriptions.add(SELECT_REMOVE_SOURCES, SELECT_REMOVE_SOURCES_KEYS,
+				"Remove the sources within the dragged rectangle from the current selection.");
+			descriptions.add(SELECT_ALL_VISIBLE_SOURCES,
+				SELECT_ALL_VISIBLE_SOURCES_KEYS,
+				"Add all currently visible sources to the selection.");
+		}
 	}
 
 }
