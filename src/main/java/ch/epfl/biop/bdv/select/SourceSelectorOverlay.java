@@ -229,6 +229,11 @@ public class SourceSelectorOverlay extends BdvOverlay {
 	@Override
 	public synchronized void draw(Graphics2D g) {
 
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+			RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+			RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
 		Map<Integer,Set<Integer>> occupied = new HashMap<>();
 
 		for (SourceBoxOverlay source : sourcesBoxOverlay) {
@@ -252,9 +257,13 @@ public class SourceSelectorOverlay extends BdvOverlay {
 	public void updateBoxes() {
 		List<SourceBoxOverlay> newSourcesBoxOverlay = new ArrayList<>();
 
+		int currentTimepoint = viewer.state().getCurrentTimepoint();
 		for (SourceAndConverter<?> sac : viewer.state().getVisibleSources()) {
-			if (sac.getSpimSource().getSource(viewer.state().getCurrentTimepoint(),
-				0) != null)
+			// Sources absent at the current timepoint draw no box anyway
+			// (getInterval returns null), testing isPresent first only avoids
+			// calling getSource on a timepoint it may not know about
+			if (sac.getSpimSource().isPresent(currentTimepoint) && sac
+				.getSpimSource().getSource(currentTimepoint, 0) != null)
 			{ // TODO : fix hack to avoid dirty overlay filter
 				newSourcesBoxOverlay.add(new SourceSelectorOverlay.SourceBoxOverlay(
 					sac));
@@ -278,28 +287,7 @@ public class SourceSelectorOverlay extends BdvOverlay {
 			rbh = new RenderBoxHelper();
 		}
 
-		private Map<Integer,Set<Integer>> displayAt(Graphics2D graphics, double xp, double yp, String name, Map<Integer,Set<Integer>> occupied) {
-			double binSizeX = 100;
-			double binSizeY = 20;
-			int binX = (int) (xp/binSizeX);
-			int binY = (int) (yp/binSizeY);
-			int shiftX = 0;
-			int shiftY = 0;
-			if (!occupied.containsKey(binX)) {
-				occupied.put(binX, new HashSet<>());
-			}
-			Set<Integer> occupiedY = occupied.get(binX);
-
-			while (occupiedY.contains(binY)) {
-				binY++;
-				shiftY += (int) binSizeY;
-			}
-			occupiedY.add(binY);
-			graphics.drawString(sac.getSpimSource().getName(),(int) (xp+shiftX),(int) (yp+shiftY));
-			return occupied;
-		}
-
-		private	Map<Integer,Set<Integer>> drawBoxOverlay(Graphics2D graphics, boolean displaySourcesNames, Map<Integer,Set<Integer>> occupied) {
+		private	void drawBoxOverlay(Graphics2D graphics, boolean displaySourcesNames, Map<Integer,Set<Integer>> occupied) {
 			OverlayStyle os;
 
 			if (ssb.selectedSources.contains(sac)) {
@@ -335,9 +323,6 @@ public class SourceSelectorOverlay extends BdvOverlay {
 					if ((rectBounds.y + rectBounds.height > 0) &&
 						(rectBounds.y < canvasHeight))
 					{
-						graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-							RenderingHints.VALUE_ANTIALIAS_ON);
-
 						graphics.setPaint(os.getIntersectionFillColor());
 						graphics.fill(intersection);
 
@@ -350,15 +335,13 @@ public class SourceSelectorOverlay extends BdvOverlay {
 							a.intersect(new Area(screen));
 							double cx = a.getBounds2D().getCenterX();
 							double cy = a.getBounds2D().getCenterY();
-							//graphics.drawString(sac.getSpimSource().getName(),(int) cx,(int)cy);
-							graphics.setColor(os.getFrontColor());
-							occupied = displayAt(graphics, cx, cy, sac.getSpimSource().getName(), occupied);
+							LabelRenderer.drawLabel(graphics, sac.getSpimSource().getName(),
+								cx, cy, os.getFrontColor(), os.getTextOutlineColor(),
+								occupied);
 						}
 					}
 				}
 			}
-
-			return occupied;
 
 		}
 
@@ -388,6 +371,12 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
 	public interface OverlayStyle {
 
+		/**
+		 * Color of the outline drawn around the source names, which keeps them
+		 * readable over bright image data
+		 */
+		Color TEXT_OUTLINE_COLOR = new Color(0, 0, 0, 200);
+
 		Color getBackColor();
 
 		Color getFrontColor();
@@ -400,6 +389,14 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
 		Stroke getIntersectionStroke();
 
+		/**
+		 * @return the color of the outline drawn around the source names, or null
+		 *         for no outline
+		 */
+		default Color getTextOutlineColor() {
+			return TEXT_OUTLINE_COLOR;
+		}
+
 	}
 
 	public static class DefaultOverlayStyle implements
@@ -408,7 +405,9 @@ public class SourceSelectorOverlay extends BdvOverlay {
 
 		final Color backColor = new Color(0x00994499);
 
-		final Color frontColor = new Color(0x5D46B6);
+		// Light enough to be read over the black background of bdv, the previous
+		// dark indigo was barely visible
+		final Color frontColor = new Color(0xD9CFF2);
 
 		final Color intersectionFillColor = new Color(0x32994499, true);
 

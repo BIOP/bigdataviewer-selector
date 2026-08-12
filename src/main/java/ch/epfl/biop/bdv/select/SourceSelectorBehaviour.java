@@ -474,6 +474,15 @@ public class SourceSelectorBehaviour implements ViewerStateChangeListener {
 			}
 		}
 		if (change.equals(CURRENT_TIMEPOINT_CHANGED)) {
+			// Only the boxes are recomputed : the selection is deliberately left
+			// untouched when the user browses the timepoints. A source selected at a
+			// timepoint where it exists stays selected at the timepoints where it
+			// does not, so that a selection can be built up across the whole time
+			// range. This works because the pruning above keys off
+			// getVisibleSources(), which - contrary to getVisibleAndPresentSources()
+			// - does not depend on the current timepoint, and because
+			// setCurrentTimepoint only fires CURRENT_TIMEPOINT_CHANGED. Do not add
+			// pruning here.
 			selectorOverlay.updateBoxes();
 		}
 	}

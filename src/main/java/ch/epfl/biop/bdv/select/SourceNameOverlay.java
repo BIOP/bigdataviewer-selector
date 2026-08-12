@@ -39,12 +39,12 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,6 +80,20 @@ public class SourceNameOverlay extends BdvOverlay {
 	@Override
 	public synchronized void draw(Graphics2D g) {
 
+		// The list of sources is rebuilt at every repaint : contrary to
+		// SourceSelectorOverlay, this overlay is not driven by a
+		// ViewerStateChangeListener, so a cached list would keep displaying the
+		// names of sources which have since been removed or hidden, would miss the
+		// sources added after this overlay was created, and would hold on to
+		// removed sources. The cost is negligible next to the geometry computed
+		// below for each source.
+		updateBoxes();
+
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+			RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+			RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
 		Map<Integer,Set<Integer>> occupied = new HashMap<>();
 
 		for (SourceBoxOverlay source : sourcesBoxOverlay) {
@@ -97,9 +111,14 @@ public class SourceNameOverlay extends BdvOverlay {
 	public void updateBoxes() {
 		List<SourceBoxOverlay> newSourcesBoxOverlay = new ArrayList<>();
 
+		int currentTimepoint = viewer.state().getCurrentTimepoint();
 		for (SourceAndConverter<?> sac : viewer.state().getVisibleSources()) {
-			if (sac.getSpimSource().getSource(viewer.state().getCurrentTimepoint(),
-				0) != null) { // TODO : that's a hack to prevent issues with overlay sources
+			// Sources absent at the current timepoint are labelled nowhere anyway
+			// (getInterval returns null), testing isPresent first only avoids
+			// calling getSource on a timepoint it may not know about
+			if (sac.getSpimSource().isPresent(currentTimepoint) && sac
+				.getSpimSource().getSource(currentTimepoint,
+					0) != null) { // TODO : that's a hack to prevent issues with overlay sources
 				newSourcesBoxOverlay.add(new SourceNameOverlay.SourceBoxOverlay(
 					sac));
 			}
@@ -109,27 +128,6 @@ public class SourceNameOverlay extends BdvOverlay {
 			sourcesBoxOverlay = newSourcesBoxOverlay;
 		}
 
-	}
-
-	private static Map<Integer,Set<Integer>> displayNameAt(SourceAndConverter<?> sac, Graphics2D graphics, double xp, double yp, String name, Map<Integer,Set<Integer>> occupied) {
-		double binSizeX = 100;
-		double binSizeY = 20;
-		int binX = (int) (xp/binSizeX);
-		int binY = (int) (yp/binSizeY);
-		int shiftX = 0;
-		int shiftY = 0;
-		if (!occupied.containsKey(binX)) {
-			occupied.put(binX, new HashSet<>());
-		}
-		Set<Integer> occupiedY = occupied.get(binX);
-
-		while (occupiedY.contains(binY)) {
-			binY++;
-			shiftY += (int) binSizeY;
-		}
-		occupiedY.add(binY);
-		graphics.drawString(sac.getSpimSource().getName(),(int) (xp+shiftX),(int) (yp+shiftY));
-		return occupied;
 	}
 
 	class SourceBoxOverlay implements TransformedBox {
@@ -143,7 +141,7 @@ public class SourceNameOverlay extends BdvOverlay {
 			rbh = new RenderBoxHelper();
 		}
 
-		private	Map<Integer,Set<Integer>> drawSourceNameOverlay(Graphics2D graphics, Map<Integer,Set<Integer>> occupied) {
+		private	void drawSourceNameOverlay(Graphics2D graphics, Map<Integer,Set<Integer>> occupied) {
 			OverlayStyle os;
 		
 			os = styles.get("DEFAULT");
@@ -174,19 +172,17 @@ public class SourceNameOverlay extends BdvOverlay {
 				{
 					if ((rectBounds.y + rectBounds.height > 0) &&
 						(rectBounds.y < canvasHeight))
-					{						
+					{
 						Area a = new Area(intersection);
 						a.intersect(new Area(screen));
 						double cx = a.getBounds2D().getCenterX();
 						double cy = a.getBounds2D().getCenterY();
-						//graphics.drawString(sac.getSpimSource().getName(),(int) cx,(int)cy);
-						graphics.setColor(os.getFrontColor());
-						occupied = displayNameAt(sac, graphics, cx, cy, sac.getSpimSource().getName(), occupied);
+						LabelRenderer.drawLabel(graphics, sac.getSpimSource().getName(),
+							cx, cy, os.getFrontColor(), os.getTextOutlineColor(),
+							occupied);
 					}
 				}
 			}
-
-			return occupied;
 
 		}
 
@@ -216,6 +212,12 @@ public class SourceNameOverlay extends BdvOverlay {
 
 	public interface OverlayStyle {
 
+		/**
+		 * Color of the outline drawn around the source names, which keeps them
+		 * readable over bright image data
+		 */
+		Color TEXT_OUTLINE_COLOR = new Color(0, 0, 0, 200);
+
 		Color getBackColor();
 
 		Color getFrontColor();
@@ -228,6 +230,14 @@ public class SourceNameOverlay extends BdvOverlay {
 
 		Stroke getIntersectionStroke();
 
+		/**
+		 * @return the color of the outline drawn around the source names, or null
+		 *         for no outline
+		 */
+		default Color getTextOutlineColor() {
+			return TEXT_OUTLINE_COLOR;
+		}
+
 	}
 
 	public static class DefaultOverlayStyle implements
@@ -236,7 +246,9 @@ public class SourceNameOverlay extends BdvOverlay {
 
 		final Color backColor = new Color(0x00994499);
 
-		final Color frontColor = new Color(0x5D46B6);
+		// Light enough to be read over the black background of bdv, the previous
+		// dark indigo was barely visible
+		final Color frontColor = new Color(0xD9CFF2);
 
 		final Color intersectionFillColor = new Color(0x32994499, true);
 
